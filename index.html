@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>유통지원 할일 체크리스트 대시보드 (공유)</title>
+<style>
+  :root{
+    --bg:#f5f7fb; --panel:#ffffff; --text:#1a1d29; --sub:#5b6272; --border:#e5e8f0;
+    --blue:#2563eb; --blue-bg:#eaf1ff; --orange:#ea580c; --orange-bg:#fff1e6;
+    --green:#16a34a; --green-bg:#e8f8ee; --amber:#d97706; --amber-bg:#fef3e0;
+    --red:#dc2626; --red-bg:#fde8e8; --purple:#7c3aed; --purple-bg:#f1e9fe;
+    --hover:#f0f3fa; --shadow: 0 1px 3px rgba(20,25,40,.06), 0 1px 2px rgba(20,25,40,.08);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#12141c; --panel:#1a1d29; --text:#eef0f6; --sub:#9aa1b3; --border:#2b2f3d;
+      --blue:#5b93ff; --blue-bg:#1c2942; --orange:#ff9a52; --orange-bg:#3a2718;
+      --green:#4ade80; --green-bg:#12301f; --amber:#fbbf24; --amber-bg:#3a2c0e;
+      --red:#f87171; --red-bg:#3a1414; --purple:#c4b5fd; --purple-bg:#2c2145;
+      --hover:#222639; --shadow: 0 1px 3px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12141c; --panel:#1a1d29; --text:#eef0f6; --sub:#9aa1b3; --border:#2b2f3d;
+    --blue:#5b93ff; --blue-bg:#1c2942; --orange:#ff9a52; --orange-bg:#3a2718;
+    --green:#4ade80; --green-bg:#12301f; --amber:#fbbf24; --amber-bg:#3a2c0e;
+    --red:#f87171; --red-bg:#3a1414; --purple:#c4b5fd; --purple-bg:#2c2145;
+    --hover:#222639; --shadow: 0 1px 3px rgba(0,0,0,.4);
+  }
+  :root[data-theme="light"]{
+    --bg:#f5f7fb; --panel:#ffffff; --text:#1a1d29; --sub:#5b6272; --border:#e5e8f0;
+    --blue:#2563eb; --blue-bg:#eaf1ff; --orange:#ea580c; --orange-bg:#fff1e6;
+    --green:#16a34a; --green-bg:#e8f8ee; --amber:#d97706; --amber-bg:#fef3e0;
+    --red:#dc2626; --red-bg:#fde8e8; --purple:#7c3aed; --purple-bg:#f1e9fe;
+    --hover:#f0f3fa; --shadow: 0 1px 3px rgba(20,25,40,.06), 0 1px 2px rgba(20,25,40,.08);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:"Pretendard","Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,sans-serif;
+    line-height:1.5;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:28px 20px 60px;}
+  header.top{margin-bottom:22px; display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap;}
+  header.top h1{font-size:22px; margin:0 0 4px; letter-spacing:-.3px;}
+  header.top p{margin:0; color:var(--sub); font-size:13.5px;}
+  .sync-box{display:flex; align-items:center; gap:8px; font-size:12.3px; color:var(--sub); background:var(--panel); border:1px solid var(--border); border-radius:20px; padding:6px 12px; box-shadow:var(--shadow);}
+  .sync-dot{width:8px; height:8px; border-radius:50%; background:var(--green); flex-shrink:0;}
+  .sync-dot.flash{animation:pulse .9s ease;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,163,74,.5);}70%{box-shadow:0 0 0 8px rgba(22,163,74,0);}100%{box-shadow:0 0 0 0 rgba(22,163,74,0);}}
+  .sync-box button{border:none; background:none; color:var(--blue); cursor:pointer; font-size:12.3px; padding:0; text-decoration:underline;}
+
+  .pw-gate{position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:1000; padding:20px;}
+  .pw-box{background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:36px 32px; text-align:center; box-shadow:var(--shadow); width:min(320px, 100%);}
+  .pw-icon{font-size:32px; margin-bottom:8px;}
+  .pw-box h2{font-size:17px; margin:0 0 4px;}
+  .pw-box p{color:var(--sub); font-size:13px; margin:0 0 16px;}
+  .pw-box input{width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:14px; margin-bottom:10px;}
+  .pw-box button{width:100%; padding:10px; border-radius:8px; border:none; background:var(--blue); color:#fff; font-weight:700; font-size:14px; cursor:pointer;}
+  .pw-box button:hover{filter:brightness(1.08);}
+  .pw-error{color:var(--red); font-size:12.5px; margin-top:10px; min-height:16px;}
+  #appArea{display:none;}
+
+  .kpi-panel{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px;}
+  .kpi-card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px 18px; box-shadow:var(--shadow); border-top:3px solid var(--blue);}
+  .kpi-card.kpi-vc{border-top-color:var(--purple);}
+  .kpi-card.kpi-svc{border-top-color:var(--amber);}
+  .kpi-head{display:flex; align-items:center; gap:7px; margin-bottom:8px;}
+  .kpi-icon{font-size:16px;}
+  .kpi-label{font-size:12.5px; font-weight:700; color:var(--sub);}
+  .kpi-value{font-size:24px; font-weight:800; margin-bottom:2px;}
+  .kpi-target{display:block; font-size:12.5px; font-weight:600; color:var(--sub); margin-bottom:6px;}
+  .kpi-bar{height:7px; border-radius:5px; background:var(--hover); overflow:hidden; margin:8px 0 7px;}
+  .kpi-bar .fill{height:100%; border-radius:5px; background:var(--blue);}
+  .kpi-vc .kpi-bar .fill{background:var(--purple);}
+  .kpi-svc .kpi-bar .fill{background:var(--amber);}
+  .kpi-sub{font-size:11.5px; color:var(--sub);}
+  .kpi-achieved{display:inline-block; font-size:10.5px; font-weight:700; color:var(--green); background:var(--green-bg); padding:1px 8px; border-radius:20px; margin-left:6px;}
+
+  .section-title{font-size:14.5px; font-weight:700; margin:0 0 10px; display:flex; align-items:center; gap:6px;}
+
+  .gap-panel{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px;}
+  .gap-list{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:7px;}
+  .gap-item{font-size:12.5px; line-height:1.45; display:flex; gap:7px; align-items:flex-start;}
+  .gap-item::before{content:"▸"; color:var(--sub); flex-shrink:0;}
+  .gap-impact{display:inline-block; font-size:10.5px; font-weight:700; color:var(--green); background:var(--green-bg); padding:1px 7px; border-radius:20px; margin-right:5px; white-space:nowrap; flex-shrink:0;}
+  .gap-total{margin-top:10px; padding-top:8px; border-top:1px dashed var(--border); font-size:12px; color:var(--sub); text-align:right;}
+  .gap-total b{color:var(--text); font-size:13.5px;}
+
+  .today-panel{background:linear-gradient(135deg, var(--red-bg), var(--orange-bg)); border:1px solid var(--border); border-radius:12px; padding:16px 18px; margin-bottom:20px; box-shadow:var(--shadow);}
+  .today-panel h2{margin:0 0 10px; font-size:14.5px; display:flex; align-items:center; gap:6px;}
+  .today-panel h2 .cnt{font-size:12px; font-weight:600; color:var(--sub); background:var(--panel); padding:2px 9px; border-radius:20px;}
+  .today-list{display:flex; flex-direction:column; gap:6px;}
+  .today-item{display:flex; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--border); border-radius:9px; padding:8px 12px; font-size:13px;}
+  .today-item .cat-tag{font-size:11px; font-weight:600; color:var(--sub); white-space:nowrap;}
+  .today-item .tt{font-weight:600; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .today-item .owners{font-size:11.5px; color:var(--sub); white-space:nowrap;}
+  .today-empty{font-size:13px; color:var(--sub); background:var(--panel); border-radius:9px; padding:10px 12px; text-align:center;}
+
+  .stats{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:20px;}
+  .stat{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px; box-shadow:var(--shadow);}
+  .stat .num{font-size:24px; font-weight:700;}
+  .stat .lbl{font-size:12.5px; color:var(--sub); margin-top:2px;}
+  .stat.warn .num{color:var(--red);}
+
+  .controls{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:20px; box-shadow:var(--shadow); display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
+  .controls input[type=text]{flex:1; min-width:180px; padding:9px 12px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:13.5px;}
+  .controls select{padding:9px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:13.5px;}
+  .controls label.chk{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--sub); cursor:pointer; white-space:nowrap;}
+  .controls .count{margin-left:auto; font-size:12.5px; color:var(--sub);}
+  .controls button{padding:9px 14px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); cursor:pointer; font-size:13px;}
+  .controls button:hover{background:var(--hover);}
+
+  .catnav{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;}
+  .catnav a{font-size:12.3px; padding:6px 12px; border-radius:20px; background:var(--panel); border:1px solid var(--border); color:var(--text); text-decoration:none; display:flex; align-items:center; gap:5px; box-shadow:var(--shadow);}
+  .catnav a:hover{background:var(--hover);}
+  .catnav a .cnt{color:var(--sub); font-weight:600;}
+
+  .category{background:var(--panel); border:1px solid var(--border); border-radius:12px; margin-bottom:16px; box-shadow:var(--shadow); overflow:hidden; scroll-margin-top:16px;}
+  .cat-head{padding:16px 18px; display:flex; align-items:center; gap:12px; cursor:pointer; user-select:none;}
+  .cat-head .icon{font-size:20px;}
+  .cat-head .title{font-size:15.5px; font-weight:700; flex:0 0 auto;}
+  .cat-head .depts{display:flex; gap:5px; flex-wrap:wrap;}
+  .dept-pill{font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; background:var(--blue-bg); color:var(--blue); white-space:nowrap;}
+  .cat-head .spacer{flex:1;}
+  .cat-head .progress-wrap{display:flex; align-items:center; gap:8px; min-width:180px;}
+  .progress-bar{width:120px; height:8px; border-radius:6px; background:var(--hover); overflow:hidden;}
+  .progress-bar .fill{height:100%; background:var(--green); border-radius:6px;}
+  .progress-txt{font-size:12.3px; color:var(--sub); white-space:nowrap; font-weight:600;}
+  .cat-head .chev{font-size:12px; color:var(--sub); transition:transform .15s;}
+  .category.collapsed .chev{transform:rotate(-90deg);}
+  .category.collapsed .cat-body{display:none;}
+
+  .cat-body{border-top:1px solid var(--border);}
+  table{width:100%; border-collapse:collapse;}
+  thead th{text-align:left; font-size:11.5px; color:var(--sub); font-weight:600; padding:9px 14px; background:var(--hover); white-space:nowrap;}
+  tbody td{padding:10px 14px; font-size:13.2px; border-top:1px solid var(--border); vertical-align:top;}
+  tbody tr:hover{background:var(--hover);}
+  tbody tr.done{opacity:.6;}
+  tbody tr.done .task-title{text-decoration:line-through;}
+  .task-title{font-weight:600; margin-bottom:2px;}
+  .task-detail{color:var(--sub); font-size:12.5px;}
+  .attach-list{display:flex; flex-wrap:wrap; gap:5px;}
+  .attach-btn{display:inline-flex; align-items:center; gap:4px; font-size:11.5px; font-weight:700; color:#fff; padding:4px 10px; border-radius:20px; text-decoration:none; white-space:nowrap; vertical-align:middle; box-shadow:0 1px 3px rgba(0,0,0,.2);}
+  .attach-btn:hover{filter:brightness(1.08);}
+  .attach-btn.attach-url{background:var(--green);}
+  .attach-btn.attach-file{background:var(--blue);}
+  .owner-pill{display:inline-block; font-size:11.5px; padding:2px 8px; border-radius:20px; background:var(--purple-bg); color:var(--purple); margin:1px 3px 1px 0; white-space:nowrap;}
+  .status-icon{font-size:16px;}
+  .badge{display:inline-block; font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap;}
+  .badge-overdue{background:var(--red-bg); color:var(--red);}
+  .badge-today{background:var(--orange-bg); color:var(--orange);}
+  .badge-soon{background:var(--amber-bg); color:var(--amber);}
+  .badge-monthend{background:var(--blue-bg); color:var(--blue);}
+  .badge-adhoc{background:var(--hover); color:var(--sub);}
+  .badge-done{background:var(--green-bg); color:var(--green);}
+  .result-txt{color:var(--sub); font-size:12px; white-space:pre-line;}
+  .empty{text-align:center; padding:40px; color:var(--sub); font-size:13.5px;}
+  footer{text-align:center; color:var(--sub); font-size:12px; margin-top:24px;}
+
+  @media screen and (max-width: 860px){
+    .kpi-panel{grid-template-columns:1fr;}
+    .gap-panel{grid-template-columns:1fr;}
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .cat-head{flex-wrap:wrap;}
+    .cat-head .progress-wrap{min-width:0; width:100%; order:5;}
+    table thead{display:none;}
+    table, tbody, tr, td{display:block; width:100%;}
+    tbody tr{border-bottom:1px solid var(--border); padding:10px 14px;}
+    tbody td{border:none; padding:3px 0; display:flex; gap:8px;}
+    tbody td::before{content:attr(data-label); font-size:11px; color:var(--sub); min-width:60px; font-weight:600; flex-shrink:0;}
+  }
+  /* ---- 인쇄/PDF: 화면과 같은 레이아웃을 압축된 밀도로 출력 (페이지 수 절약) ---- */
+  @media print{
+    :root{
+      --bg:#f5f7fb; --panel:#ffffff; --text:#1a1d29; --sub:#5b6272; --border:#d7dbe6;
+      --blue:#2563eb; --blue-bg:#eaf1ff; --orange:#ea580c; --orange-bg:#fff1e6;
+      --green:#16a34a; --green-bg:#e8f8ee; --amber:#d97706; --amber-bg:#fef3e0;
+      --red:#dc2626; --red-bg:#fde8e8; --purple:#7c3aed; --purple-bg:#f1e9fe;
+      --hover:#f0f3fa; --shadow:none;
+    }
+    *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+    body{background:#fff; font-size:9px;}
+    .wrap{max-width:100%; padding:4mm 0 0;}
+    .sync-box, .controls, .catnav, footer{display:none !important;}
+    .today-item, .stat{break-inside:avoid;}
+    .cat-body tr{break-inside:avoid;}
+    .category.collapsed .cat-body{display:block !important;}
+    .cat-head{cursor:default;}
+    @page{ margin:10mm 9mm; }
+
+    header.top{margin-bottom:8px;}
+    header.top h1{font-size:15px;}
+    header.top p{font-size:9.5px;}
+    .section-title{font-size:10.5px; margin-bottom:5px;}
+    .kpi-panel{gap:6px; margin-bottom:8px;}
+    .kpi-card{padding:7px 10px; border-radius:6px; border-top-width:2px;}
+    .kpi-head{margin-bottom:3px; gap:4px;}
+    .kpi-icon{font-size:11px;}
+    .kpi-label{font-size:8.5px;}
+    .kpi-value{font-size:14px; margin-bottom:0;}
+    .kpi-target{font-size:8.5px; margin-bottom:3px;}
+    .kpi-bar{height:4px; margin:4px 0 4px;}
+    .kpi-sub{font-size:7.5px;}
+    .kpi-achieved{font-size:7px; padding:0 5px;}
+    .gap-panel{gap:6px; margin-bottom:8px;}
+    .gap-list{gap:3px;}
+    .gap-item{font-size:8px; gap:4px;}
+    .gap-impact{font-size:7px; padding:0 5px;}
+    .gap-total{margin-top:5px; padding-top:4px; font-size:7.5px;}
+    .gap-total b{font-size:8.5px;}
+    .today-panel{padding:7px 10px; margin-bottom:8px; border-radius:6px;}
+    .today-panel h2{font-size:10.5px; margin-bottom:5px;}
+    .today-item{padding:3px 8px; border-radius:5px; font-size:9px; gap:6px;}
+    .stats{gap:6px; margin-bottom:10px;}
+    .stat{padding:7px 10px; border-radius:6px;}
+    .stat .num{font-size:14px;}
+    .stat .lbl{font-size:8.5px;}
+    .category{border-radius:6px; margin-bottom:6px;}
+    .cat-head{padding:5px 9px; gap:7px;}
+    .cat-head .icon{font-size:11px;}
+    .cat-head .title{font-size:10.5px;}
+    .dept-pill{font-size:7.5px; padding:1px 6px;}
+    .progress-bar{width:70px; height:5px;}
+    .progress-txt{font-size:8.5px;}
+    thead th{font-size:8px; padding:3px 8px;}
+    tbody td{font-size:9px; padding:3px 8px;}
+    .task-title{margin-bottom:0;}
+    .task-detail{font-size:8.5px;}
+    .attach-list{gap:3px;}
+    .attach-btn{background:none !important; color:var(--sub) !important; padding:0; font-size:8px;}
+    .owner-pill{font-size:8px; padding:1px 5px; margin:0 2px 0 0; background:none !important; color:var(--sub) !important;}
+    .owner-pill::after{content:", "; color:var(--sub);}
+    .owner-pill:last-child::after{content:"";}
+    .badge{font-size:8.5px; padding:1px 6px; font-weight:600;}
+    .result-txt{font-size:8px;}
+    .status-icon{font-size:10px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="pw-gate" id="pwGate">
+  <div class="pw-box">
+    <div class="pw-icon">🔒</div>
+    <h2>유통지원 할일 대시보드</h2>
+    <p>비밀번호를 입력하세요</p>
+    <input type="password" id="pwInput" placeholder="비밀번호" autocomplete="off">
+    <button id="pwSubmit">확인</button>
+    <div class="pw-error" id="pwError"></div>
+  </div>
+</div>
+
+<div class="wrap" id="appArea">
+
+  <header class="top">
+    <div>
+      <h1>✅ 유통지원 할일 체크리스트 대시보드</h1>
+      <p>구글 시트 연동 · 카테고리별 진행 현황 (공유용)</p>
+    </div>
+    <div class="sync-box">
+      <span class="sync-dot" id="syncDot"></span>
+      <span id="syncLabel">불러오는 중...</span>
+      <button id="syncNowBtn">지금 확인</button>
+      <button id="printBtn">🖨 PDF로 출력</button>
+    </div>
+  </header>
+
+  <div class="section-title">📊 KPI</div>
+  <div class="kpi-panel" id="kpiPanel"></div>
+
+  <div class="section-title">🎯 GAP을 메우기 위한 할일</div>
+  <div class="gap-panel" id="gapPanel"></div>
+
+  <div class="today-panel" id="todayPanel"></div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="controls">
+    <input type="text" id="search" placeholder="내용, 담당자, 결과, 기한(예: 7월16일, 0716) 검색...">
+    <select id="fDept"><option value="">전체 담당부서</option></select>
+    <select id="fStatus">
+      <option value="">전체 상태</option>
+      <option value="done">완료</option>
+      <option value="todo">미완료</option>
+      <option value="overdue">지연</option>
+    </select>
+    <label class="chk"><input type="checkbox" id="fCollapse"> 완료 카테고리 접기</label>
+    <button id="resetBtn">초기화</button>
+    <span class="count" id="resultCount"></span>
+  </div>
+
+  <div class="catnav" id="catnav"></div>
+
+  <div id="catArea"><div class="empty">불러오는 중...</div></div>
+
+  <footer>구글 시트와 연동된 공유용 대시보드입니다. 시트를 수정하면 약 15초 이내에 자동 반영됩니다.</footer>
+</div>
+
+<script>
+// 화면에 아무것도 안 뜨는 문제를 콘솔(F12) 없이도 바로 알 수 있도록 오류를 화면 상단에 표시
+function showFatalError(msg){
+  let el = document.getElementById("fatalError");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "fatalError";
+    el.style.cssText = "position:fixed;top:0;left:0;right:0;background:#dc2626;color:#fff;padding:12px 16px;font-size:13px;z-index:2000;white-space:pre-wrap;";
+    document.body.appendChild(el);
+  }
+  el.textContent += (el.textContent ? "\n" : "") + msg;
+}
+window.addEventListener("error", e=>showFatalError("스크립트 오류: " + e.message));
+window.addEventListener("unhandledrejection", e=>showFatalError("처리되지 않은 오류: " + (e.reason && e.reason.message ? e.reason.message : e.reason)));
+
+// ============================================================
+// 설정: 아래 두 값을 채워야 동작합니다.
+// SHEET_CSV_URL: 구글시트 "파일 > 공유 > 웹에 게시"에서 만든 CSV 링크
+//   (또는 링크 공유 상태에서 https://docs.google.com/spreadsheets/d/<ID>/export?format=csv&gid=<GID> 형태)
+// PASSWORD: 접속 비밀번호 (가벼운 진입장벽용 - 화면 소스를 보면 노출되는 수준의 보호입니다)
+// ============================================================
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSw7F56F3B-YfoUij840qxkG_teouueOdvnHfOnFVEsd0pvjN8A6wt7ZED5YIqvu0ZaqF2-wE564hI3/pub?gid=0&single=true&output=csv";
+const PASSWORD = "1234";
+
+const CAT_ICON = {
+  "블록형 거점 도매":"📦","평가안 고도화":"📊","클레임 채널 고도화":"📮","배송":"🚚",
+  "그룹사 연계":"🔗","신사업":"🌱","기여도":"⚖️","더샵 입찰":"🏢","DCM 연동율":"🔄",
+  "권역 외 유통":"🗺️","홍보":"📰","데이터 확보":"💾","VC 평가":"🧾"
+};
+
+// 출처: 유통지원팀 26년 상반기 성과 및 하반기 전략(최종).xlsx · ■ KPI / ■ Key Result
+const KPI_DATA = [
+  { cls:"kpi-direct", icon:"🔄", label:"직거래 활성화", value:"33%", target:"목표 50%",
+    pct:Math.round((33-18)/(50-18)*100), sub:"25년 18% → 26년 6월 33% (잔여 gap 17%p, 연 매출 목표 3,300억)" },
+  { cls:"kpi-vc", icon:"🏬", label:"VC 활성화", value:"월 31억", target:"목표 월 110억",
+    pct:Math.round((31-10)/(110-10)*100), sub:"25년 월 10억 → 26년 6월 월 31억 (잔여 gap 월 79억)" },
+  { cls:"kpi-svc", icon:"⭐", label:"블록형 거점 도매 서비스", value:"4/5 업체 · 10/11 권역", target:"목표 5개업체 / 11개권역 S",
+    pct:Math.round(10/11*100), achieved:false, sub:"아이팜코리아(대구) 1개 업체만 A등급 · 나머지 4개 업체·10개 권역 S등급 → 5개 업체 전원 S 달성해야 목표 충족(미달성)" }
+];
+
+function renderKpiPanel(){
+  const el = document.getElementById("kpiPanel");
+  el.innerHTML = KPI_DATA.map(k=>`
+    <div class="kpi-card ${k.cls}">
+      <div class="kpi-head"><span class="kpi-icon">${k.icon}</span><span class="kpi-label">${k.label}</span></div>
+      <div class="kpi-value">${k.value}${k.achieved?'<span class="kpi-achieved">달성</span>':''}</div>
+      <span class="kpi-target">${k.target}</span>
+      <div class="kpi-bar"><div class="fill" style="width:${Math.min(100,Math.max(0,k.pct))}%"></div></div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>
+  `).join("");
+}
+
+// 출처: 유통지원팀 26년 상반기 성과 및 하반기 전략(최종).xlsx · ■ 하반기 전략 (GAP을 메우기 위해 할일)
+const GAP_DATA = [
+  { cls:"kpi-direct", icon:"🔄", label:"직거래 활성화 GAP 메우기", items:[
+    {impact:10, text:"고객 클레임 최소화: CS 채널 4개(더샵1·홈페이지2·영업부1) 활성화로 클레임 ZERO 도전"},
+    {impact:null, text:"블록형 거점 도매 고도화: 평가 고도화, 서비스 고도화"},
+    {impact:20, text:"발주 채널 이원화: 블록형 거점 도매사 외 발주 통제 (한미몰 등 온라인 판매 20억 → 직거래 유입)"},
+    {impact:5, text:"반품 리드타임 단축: 10일 → 7일"},
+    {impact:10, text:"[영업부 소통] 데이터 분석: 블록형 거점 도매 시스템 안정화 → 직거래 데이터 분석으로 영업부 움직이기"},
+    {impact:30, text:"[영업부 소통] 부진사무소 분석 및 피드백: 소장 직접 본부장 보고 체계 (6월 말 기준 미완료 · 유통지원팀 주인)"},
+    {impact:10, text:"[영업부 소통] 성공 모델 발굴: 성공사례 없는 사무소 파악, 직거래율 상승 연계 여부 관리"},
+    {impact:10, text:"[영업부 소통] 영업부 연계 성공모델 발굴 (이지메디컴 연계)"}
+  ]},
+  { cls:"kpi-vc", icon:"🏬", label:"VC 활성화 GAP 메우기", items:[
+    {impact:30, text:"이지메디컴 VC 활성화 파일럿: 영업부 연계 성공모델 발굴, 1개 사무소 1~2억 달성 목표"},
+    {impact:30, text:"기여도 평가 VC 확대: 거점 도매 VC 오픈을 모든 거점이 원하게끔 프로세스 정립"},
+    {impact:10, text:"약사 추천·엠버서더·웰컴라운지 프로모션으로 전환·리텐션·추천 구조 구축"}
+  ]},
+  { cls:"kpi-svc", icon:"⭐", label:"블록형 거점 도매 서비스 GAP 메우기", items:[
+    {impact:null, text:"SLA 평가 및 리뷰: 평가 후 대면/비대면 리뷰로 업체 억울한 부분 없도록 조율"},
+    {impact:null, text:"성공 모델 발굴: 서비스 질 개선 모델 발굴, 홍보팀 연계 공격적 홍보"},
+    {impact:null, text:"업무 자동화: 할일 리스트 실시간 관리로 문제 즉시 해결, SLA 개선사항 실시간 업데이트"}
+  ]}
+];
+
+function renderGapPanel(){
+  const el = document.getElementById("gapPanel");
+  el.innerHTML = GAP_DATA.map(g=>{
+    const total = g.items.reduce((s,i)=>s+(i.impact||0),0);
+    return `
+    <div class="kpi-card ${g.cls}">
+      <div class="kpi-head"><span class="kpi-icon">${g.icon}</span><span class="kpi-label">${g.label}</span></div>
+      <ul class="gap-list">
+        ${g.items.map(i=>`<li class="gap-item">${i.impact?`<span class="gap-impact">+${i.impact}억</span>`:''}${i.text}</li>`).join("")}
+      </ul>
+      ${total>0?`<div class="gap-total">예상 효과 합계 <b>+${total}억</b></div>`:''}
+    </div>`;
+  }).join("");
+}
+
+let ROWS = [], CATS = [], DEPTS = [];
+let lastGeneratedAt = null;
+
+function computeRow(r, todayDate){
+  const depts = r.depts || [];
+  const owners = r.owners || [];
+  let statusKey = "adhoc";
+  if(r.done){ statusKey = "done"; }
+  else if(r.dtype==="date"){
+    const d = new Date(r.ddate+"T00:00:00");
+    const diffDays = Math.round((d-todayDate)/86400000);
+    if(diffDays<0) statusKey="overdue";
+    else if(diffDays===0) statusKey="today";
+    else if(diffDays<=3) statusKey="soon";
+    else statusKey="date";
+  } else if(r.dtype==="monthend"){ statusKey="monthend"; }
+  return {...r, depts, owners, statusKey};
+}
+
+function refreshDeptSelect(){
+  const sel = document.getElementById("fDept");
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">전체 담당부서</option>' + DEPTS.map(d=>`<option value="${d}">${d}</option>`).join("");
+  if(DEPTS.includes(cur)) sel.value = cur;
+}
+
+function updateSyncLabel(flash){
+  const label = document.getElementById("syncLabel");
+  const dot = document.getElementById("syncDot");
+  label.textContent = "마지막 확인: " + (lastGeneratedAt || "-");
+  if(flash){
+    dot.classList.remove("flash"); void dot.offsetWidth; dot.classList.add("flash");
+  }
+}
+
+function loadData(payload, flash){
+  const today = new Date(); today.setHours(0,0,0,0);
+  ROWS = (payload.rows||[]).map(r=>computeRow(r, today));
+  CATS = [...new Set(ROWS.map(r=>r.cat))];
+  DEPTS = [...new Set(ROWS.flatMap(r=>r.depts))];
+  lastGeneratedAt = payload.generatedAt;
+  refreshDeptSelect();
+  updateSyncLabel(flash);
+  renderTodayPanel();
+  applyFilters();
+}
+
+// RFC4180 스타일 CSV 파서 (따옴표로 감싼 셀 안의 줄바꿈/쉼표도 처리)
+function parseCSV(text){
+  const rows = [];
+  let row = [], field = "", inQuotes = false;
+  for (let i=0; i<text.length; i++){
+    const c = text[i];
+    if(inQuotes){
+      if(c === '"'){
+        if(text[i+1] === '"'){ field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else {
+      if(c === '"') inQuotes = true;
+      else if(c === ','){ row.push(field); field=""; }
+      else if(c === '\r'){ /* skip, \n에서 처리 */ }
+      else if(c === '\n'){ row.push(field); rows.push(row); row=[]; field=""; }
+      else field += c;
+    }
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  return rows.filter(r => !(r.length===1 && r[0].trim()===""));
+}
+
+function parseDeadlineJS(text){
+  const t = (text||"").trim();
+  if(!t || t === "수시") return {type:"adhoc", date:null};
+  const monthMatch = t.match(/(\d+)월/);
+  if(monthMatch){
+    const month = parseInt(monthMatch[1],10);
+    const year = new Date().getFullYear();
+    const pad = n=>String(n).padStart(2,"0");
+    const dayMatch = t.match(/(\d+)일/);
+    if(dayMatch){
+      const day = parseInt(dayMatch[1],10);
+      return {type:"date", date: `${year}-${pad(month)}-${pad(day)}`};
+    }
+    const lastDay = new Date(year, month, 0).getDate();
+    return {type:"monthend", date: `${year}-${pad(month)}-${pad(lastDay)}`};
+  }
+  return {type:"adhoc", date:null};
+}
+
+// 담당부서/첨부파일처럼 한 칸에 여러 값을 넣는 필드는 줄바꿈(Alt+Enter) 또는 " / "로 구분한다.
+// (구글시트에 붙여넣기 편의상 " / "로 정리된 경우가 많아 두 방식 다 지원)
+function splitMulti(str){
+  return (str||"").split(/\r?\n|\s+\/\s+/).map(s=>s.trim()).filter(Boolean);
+}
+
+function buildPayloadFromTable(table){
+  if(table.length < 2) return {generatedAt: new Date().toLocaleString("ko-KR"), rows: []};
+  const header = table[0].map(h=>h.trim());
+  const idx = name => header.indexOf(name);
+  const cDept=idx("담당부서"), cCat=idx("카테고리"), cKpi=idx("KPI"), cTitle=idx("내용"),
+        cDetail=idx("세부내용"), cDue=idx("기한"), cOwner=idx("주인"), cCheck=idx("O / X"),
+        cResult=idx("결과"), cAttach=idx("첨부파일");
+  const rows = [];
+  for(let r=1;r<table.length;r++){
+    const row = table[r];
+    const cat = (row[cCat]||"").trim();
+    const title = (row[cTitle]||"").trim();
+    if(!cat && !title) continue;
+    const depts = splitMulti(row[cDept]);
+    const owners = (row[cOwner]||"").split(",").map(s=>s.trim()).filter(Boolean);
+    const ddText = (row[cDue]||"").trim();
+    const dd = parseDeadlineJS(ddText);
+    const done = (row[cCheck]||"").trim() !== "";
+    const result = (row[cResult]||"").replace(/\r\n/g,"\n");
+    const attachment = (cAttach>=0 ? (row[cAttach]||"") : "").replace(/\r\n/g,"\n").trim();
+    const kpi = (cKpi>=0 ? (row[cKpi]||"") : "").trim();
+    rows.push({depts, cat, kpi, title, detail:(row[cDetail]||"").trim(), ddText, dtype:dd.type, ddate:dd.date, owners, done, result, attachment});
+  }
+  return {generatedAt: new Date().toLocaleString("ko-KR"), rows};
+}
+
+let lastRawCsv = null;
+async function pollSheet(isManual){
+  try{
+    const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes("?")?"&":"?") + "t=" + Date.now();
+    const res = await fetch(url, {cache:"no-store"});
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const text = await res.text();
+    const changed = text !== lastRawCsv;
+    if(!changed && !isManual) return;
+    lastRawCsv = text;
+    const table = parseCSV(text);
+    const payload = buildPayloadFromTable(table);
+    loadData(payload, changed || isManual);
+  } catch(e){
+    document.getElementById("syncLabel").textContent = "동기화 실패 - 잠시 후 재시도";
+    if(ROWS.length === 0){
+      document.getElementById("catArea").innerHTML = `<div class="empty">구글시트를 불러오지 못했습니다.<br>${e.message}</div>`;
+    }
+  }
+}
+
+function badgeHtml(row){
+  if(row.done) return '<span class="badge badge-done">✔ 완료</span>';
+  switch(row.statusKey){
+    case "overdue": return '<span class="badge badge-overdue">⏰ 지연 · '+row.ddText+'</span>';
+    case "today": return '<span class="badge badge-today">🔥 오늘마감</span>';
+    case "soon": return '<span class="badge badge-soon">⚠ 임박 · '+row.ddText+'</span>';
+    case "monthend": return '<span class="badge badge-monthend">🗓 '+row.ddText+'</span>';
+    case "adhoc": return '<span class="badge badge-adhoc">🔁 수시</span>';
+    default: return '<span class="badge badge-monthend">🗓 '+row.ddText+'</span>';
+  }
+}
+
+// 첨부파일 칸에 줄바꿈(Alt+Enter)으로 여러 건을 넣을 수 있다.
+// 각 줄은 "라벨:URL" 형식이면 라벨이 버튼에 표시된다. (공유용에서는 URL 첨부만 다른 사람이 열 수 있음 - 로컬 파일명은 이 PC에서만 동작)
+function parseAttachments(raw){
+  if(!raw) return [];
+  return splitMulti(raw).map(line=>{
+    const idx = line.search(/[:：]/);
+    if(idx > 0){
+      const before = line.slice(0, idx).trim();
+      const after = line.slice(idx+1).trim();
+      if(after && !/^https?$/i.test(before)) return { label: before, value: after };
+    }
+    return { label: null, value: line };
+  });
+}
+
+function attachHtml(row){
+  const items = parseAttachments(row.attachment);
+  if(items.length === 0) return '';
+  return items.map(item=>{
+    const isUrl = /^https?:\/\//i.test(item.value);
+    const href = isUrl ? item.value : "첨부파일/" + item.value.split("/").map(encodeURIComponent).join("/");
+    const cls = isUrl ? "attach-btn attach-url" : "attach-btn attach-file";
+    const icon = isUrl ? "🔗" : "📎";
+    const label = item.label || (isUrl ? "바로가기" : "첨부파일");
+    return `<a class="${cls}" href="${href}" target="_blank" title="${item.value}" onclick="event.stopPropagation()">${icon} ${label}</a>`;
+  }).join("");
+}
+
+function renderTodayPanel(){
+  const panel = document.getElementById("todayPanel");
+  const items = ROWS.filter(r=>!r.done && (r.statusKey==="overdue" || r.statusKey==="today"))
+    .sort((a,b)=> (a.statusKey==="overdue"?0:1) - (b.statusKey==="overdue"?0:1));
+  const count = items.length;
+  const listHtml = count===0
+    ? '<div class="today-empty">🎉 오늘 마감이거나 지연된 항목이 없습니다.</div>'
+    : `<div class="today-list">${items.map(r=>`
+        <div class="today-item">
+          <span class="cat-tag">${CAT_ICON[r.cat]||"📌"} ${r.cat}</span>
+          <span class="tt">${r.title} · ${r.detail}</span>
+          ${badgeHtml(r)}
+          <span class="owners">${r.owners.join(", ")}</span>
+        </div>
+      `).join("")}</div>`;
+  panel.innerHTML = `<h2>🔥 오늘 해야 하는 일 <span class="cnt">${count}건</span></h2>${listHtml}`;
+}
+
+function renderStats(rows){
+  const total = rows.length;
+  const done = rows.filter(r=>r.done).length;
+  const todo = total-done;
+  const overdue = rows.filter(r=>r.statusKey==="overdue").length;
+  const rate = total? Math.round(done/total*100):0;
+  document.getElementById("stats").innerHTML = `
+    <div class="stat"><div class="num">${total}</div><div class="lbl">전체 항목</div></div>
+    <div class="stat"><div class="num" style="color:var(--green)">${done}</div><div class="lbl">완료</div></div>
+    <div class="stat"><div class="num" style="color:var(--amber)">${todo}</div><div class="lbl">미완료</div></div>
+    <div class="stat"><div class="num">${rate}%</div><div class="lbl">완료율</div></div>
+    <div class="stat ${overdue>0?'warn':''}"><div class="num">${overdue}</div><div class="lbl">지연 항목</div></div>
+  `;
+}
+
+function renderCatNav(rows){
+  const nav = document.getElementById("catnav");
+  nav.innerHTML = CATS.map(cat=>{
+    const catRows = rows.filter(r=>r.cat===cat);
+    if(catRows.length===0) return "";
+    const done = catRows.filter(r=>r.done).length;
+    return `<a href="#cat-${slug(cat)}">${CAT_ICON[cat]||"📌"} ${cat} <span class="cnt">${done}/${catRows.length}</span></a>`;
+  }).join("");
+}
+
+function slug(s){ return s.replace(/[^가-힣a-zA-Z0-9]/g,""); }
+
+function renderCategories(rows){
+  const area = document.getElementById("catArea");
+  const collapseDone = document.getElementById("fCollapse").checked;
+  let html = "";
+  CATS.forEach(cat=>{
+    const catRows = rows.filter(r=>r.cat===cat);
+    if(catRows.length===0) return;
+    const done = catRows.filter(r=>r.done).length;
+    const total = catRows.length;
+    const pct = Math.round(done/total*100);
+    const depts = [...new Set(catRows.flatMap(r=>r.depts))];
+    const allDone = done===total;
+    const collapsed = collapseDone && allDone;
+    html += `<div class="category ${collapsed?'collapsed':''}" id="cat-${slug(cat)}">
+      <div class="cat-head" onclick="this.parentElement.classList.toggle('collapsed')">
+        <span class="icon">${CAT_ICON[cat]||"📌"}</span>
+        <span class="title">${cat}</span>
+        <span class="depts">${depts.map(d=>`<span class="dept-pill">${d}</span>`).join("")}</span>
+        <span class="spacer"></span>
+        <span class="progress-wrap">
+          <div class="progress-bar"><div class="fill" style="width:${pct}%"></div></div>
+          <span class="progress-txt">${done}/${total} (${pct}%)</span>
+        </span>
+        <span class="chev">▼</span>
+      </div>
+      <div class="cat-body">
+        <table>
+          <thead><tr><th style="width:34px"></th><th>내용 / 세부내용</th><th>기한</th><th>담당자</th><th>결과</th><th>첨부파일</th></tr></thead>
+          <tbody>
+            ${catRows.map(r=>{
+              const attach = attachHtml(r);
+              return `
+              <tr class="${r.done?'done':''}">
+                <td data-label="상태"><span class="status-icon">${r.done?'✅':'⬜'}</span></td>
+                <td data-label="내용"><div class="task-title">${r.title}</div><div class="task-detail">${r.detail}</div></td>
+                <td data-label="기한">${badgeHtml(r)}</td>
+                <td data-label="담당자">${r.owners.map(o=>`<span class="owner-pill">${o}</span>`).join("")}</td>
+                <td data-label="결과"><span class="result-txt">${r.result||"-"}</span></td>
+                <td data-label="첨부파일">${attach ? `<div class="attach-list">${attach}</div>` : '<span class="result-txt">-</span>'}</td>
+              </tr>
+            `;}).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  });
+  area.innerHTML = html || '<div class="empty">조건에 맞는 항목이 없습니다.</div>';
+}
+
+function toDigits(s){ return (s||"").replace(/\D/g,""); }
+
+function applyFilters(){
+  const q = document.getElementById("search").value.trim().toLowerCase();
+  const qDigits = toDigits(q);
+  const dept = document.getElementById("fDept").value;
+  const status = document.getElementById("fStatus").value;
+
+  let rows = ROWS.filter(r=>{
+    if(dept && !r.depts.includes(dept)) return false;
+    if(status==="done" && !r.done) return false;
+    if(status==="todo" && r.done) return false;
+    if(status==="overdue" && r.statusKey!=="overdue") return false;
+    if(q){
+      const hay = [r.title,r.detail,r.result,r.cat,r.ddText,r.ddate,...r.owners,...r.depts].join(" ").toLowerCase();
+      const textMatch = hay.includes(q);
+      const dateMatch = qDigits.length>=2 && toDigits(r.ddText+" "+(r.ddate||"")).includes(qDigits);
+      if(!textMatch && !dateMatch) return false;
+    }
+    return true;
+  });
+
+  renderStats(rows);
+  renderCatNav(rows);
+  renderCategories(rows);
+  document.getElementById("resultCount").textContent = `${rows.length} / ${ROWS.length}건 표시`;
+}
+
+document.getElementById("search").addEventListener("input", applyFilters);
+document.getElementById("fDept").addEventListener("change", applyFilters);
+document.getElementById("fStatus").addEventListener("change", applyFilters);
+document.getElementById("fCollapse").addEventListener("change", applyFilters);
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  document.getElementById("search").value="";
+  document.getElementById("fDept").value="";
+  document.getElementById("fStatus").value="";
+  document.getElementById("fCollapse").checked=false;
+  applyFilters();
+});
+
+document.getElementById("syncNowBtn").addEventListener("click", ()=>pollSheet(true));
+document.getElementById("printBtn").addEventListener("click", ()=>window.print());
+
+function startApp(){
+  renderKpiPanel();
+  renderGapPanel();
+  pollSheet(true);
+  setInterval(()=>pollSheet(false), 15000);
+}
+
+function unlock(){
+  document.getElementById("pwGate").style.display = "none";
+  document.getElementById("appArea").style.display = "block";
+  startApp();
+}
+
+document.getElementById("pwSubmit").addEventListener("click", ()=>{
+  const pw = document.getElementById("pwInput").value;
+  if(pw === PASSWORD){
+    sessionStorage.setItem("todoDashAuthed", "1");
+    unlock();
+  } else {
+    document.getElementById("pwError").textContent = "비밀번호가 올바르지 않습니다.";
+  }
+});
+document.getElementById("pwInput").addEventListener("keydown", e=>{
+  if(e.key === "Enter") document.getElementById("pwSubmit").click();
+});
+
+if(sessionStorage.getItem("todoDashAuthed") === "1"){
+  unlock();
+}
+</script>
+</body>
+</html>
