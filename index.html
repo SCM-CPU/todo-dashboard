@@ -89,6 +89,7 @@
   .gap-total b{color:var(--text); font-size:13.5px;}
 
   .today-panel{background:linear-gradient(135deg, var(--red-bg), var(--orange-bg)); border:1px solid var(--border); border-radius:12px; padding:16px 18px; margin-bottom:20px; box-shadow:var(--shadow);}
+  .today-panel.week-panel{background:linear-gradient(135deg, var(--blue-bg), var(--purple-bg));}
   .today-panel h2{margin:0 0 10px; font-size:14.5px; display:flex; align-items:center; gap:6px;}
   .today-panel h2 .cnt{font-size:12px; font-weight:600; color:var(--sub); background:var(--panel); padding:2px 9px; border-radius:20px;}
   .today-list{display:flex; flex-direction:column; gap:6px;}
@@ -275,6 +276,8 @@
 
   <div class="today-panel" id="todayPanel"></div>
 
+  <div class="today-panel week-panel" id="weekPanel"></div>
+
   <div class="stats" id="stats"></div>
 
   <div class="controls">
@@ -434,6 +437,7 @@ function loadData(payload, flash){
   refreshDeptSelect();
   updateSyncLabel(flash);
   renderTodayPanel();
+  renderWeekPanel();
   applyFilters();
 }
 
@@ -588,6 +592,36 @@ function renderTodayPanel(){
         </div>
       `).join("")}</div>`;
   panel.innerHTML = `<h2>🔥 오늘 해야 하는 일 <span class="cnt">${count}건</span></h2>${listHtml}`;
+}
+
+// "오늘 해야 하는 일"(오늘 마감·지연)과 겹치지 않도록, 이번주 남은 기간(내일~이번주 일요일) 마감 항목만 표시
+function renderWeekPanel(){
+  const panel = document.getElementById("weekPanel");
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dow = today.getDay();
+  const daysToSunday = dow === 0 ? 0 : 7 - dow;
+  const weekEnd = new Date(today);
+  weekEnd.setDate(today.getDate() + daysToSunday);
+  weekEnd.setHours(23,59,59,999);
+
+  const items = ROWS.filter(r=>{
+    if(r.done || r.dtype !== "date") return false;
+    const d = new Date(r.ddate + "T00:00:00");
+    return d > today && d <= weekEnd;
+  }).sort((a,b)=> new Date(a.ddate) - new Date(b.ddate));
+
+  const count = items.length;
+  const listHtml = count===0
+    ? '<div class="today-empty">이번주 남은 마감 일정이 없습니다.</div>'
+    : `<div class="today-list">${items.map(r=>`
+        <div class="today-item">
+          <span class="cat-tag">${CAT_ICON[r.cat]||"📌"} ${r.cat}</span>
+          <span class="tt">${r.title} · ${r.detail}</span>
+          ${badgeHtml(r)}
+          <span class="owners">${r.owners.join(", ")}</span>
+        </div>
+      `).join("")}</div>`;
+  panel.innerHTML = `<h2>🗓 이번주 해야 하는 일 <span class="cnt">${count}건</span></h2>${listHtml}`;
 }
 
 function renderStats(rows){
