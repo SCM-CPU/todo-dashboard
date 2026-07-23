@@ -160,6 +160,11 @@
   .empty{text-align:center; padding:40px; color:var(--sub); font-size:13.5px;}
   footer{text-align:center; color:var(--sub); font-size:12px; margin-top:24px;}
 
+  .scroll-top-btn{position:fixed; right:24px; bottom:24px; width:46px; height:46px; border-radius:50%; background:var(--blue); color:#fff; border:none; font-size:20px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.25); display:none; align-items:center; justify-content:center; z-index:500;}
+  .scroll-top-btn.show{display:flex;}
+  .scroll-top-btn:hover{filter:brightness(1.08);}
+  @media print{ .scroll-top-btn{display:none !important;} }
+
   @media screen and (max-width: 860px){
     .kpi-panel{grid-template-columns:1fr;}
     .gap-panel{grid-template-columns:1fr;}
@@ -300,6 +305,8 @@
 
   <footer>구글 시트와 연동된 공유용 대시보드입니다. 시트를 수정하면 약 15초 이내에 자동 반영됩니다.</footer>
 </div>
+
+<button id="scrollTopBtn" class="scroll-top-btn" title="맨 위로" aria-label="맨 위로">↑</button>
 
 <script>
 // 화면에 아무것도 안 뜨는 문제를 콘솔(F12) 없이도 바로 알 수 있도록 오류를 화면 상단에 표시
@@ -772,6 +779,12 @@ document.getElementById("pwInput").addEventListener("keydown", e=>{
 if(sessionStorage.getItem("todoDashAuthed") === "1"){
   unlock();
 }
+
+const scrollTopBtn = document.getElementById("scrollTopBtn");
+window.addEventListener("scroll", ()=>{
+  scrollTopBtn.classList.toggle("show", window.scrollY > 300);
+});
+scrollTopBtn.addEventListener("click", ()=>window.scrollTo({top:0, behavior:"smooth"}));
 </script>
 </body>
 </html>
