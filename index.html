@@ -652,7 +652,11 @@ function lsSet(key, val){
   try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){}
 }
 
-let addedTodaySet = new Set(lsGet("todoAddedToday_" + todayStr(), []));
+// 스냅샷 자체를 append-only로 저장한다 (키만 저장하면, 구글시트 게시 CSV가 순간적으로
+// 캐시된 예전 상태를 줄 때 매 폴링마다 있다/없다가 흔들려서 패널이 깜빡였다).
+// 한 번 "오늘 추가됨"으로 확정된 항목은 그날 안에는 다시 사라지지 않는다.
+let addedTodayList = lsGet("todoAddedTodayList_" + todayStr(), []);
+let addedTodayKeys = new Set(addedTodayList.map(it=>it.key));
 
 function trackNewRows(rows){
   const currentKeys = rows.map(ROW_KEY);
@@ -660,20 +664,23 @@ function trackNewRows(rows){
   if(lastKnown !== null){
     const lastSet = new Set(lastKnown);
     let changed = false;
-    currentKeys.forEach(k=>{
-      if(!lastSet.has(k) && !addedTodaySet.has(k)){
-        addedTodaySet.add(k);
+    rows.forEach(r=>{
+      const k = ROW_KEY(r);
+      if(!lastSet.has(k) && !addedTodayKeys.has(k)){
+        addedTodayKeys.add(k);
+        addedTodayList.push({key:k, cat:r.cat, title:r.title, detail:r.detail});
         changed = true;
       }
     });
-    if(changed) lsSet("todoAddedToday_" + todayStr(), [...addedTodaySet]);
+    if(changed) lsSet("todoAddedTodayList_" + todayStr(), addedTodayList);
   }
   lsSet("todoLastKnownKeys", currentKeys);
 }
 
 function renderAddedTodayPanel(){
   const panel = document.getElementById("addedTodayPanel");
-  const items = ROWS.filter(r => addedTodaySet.has(ROW_KEY(r)));
+  const rowByKey = new Map(ROWS.map(r=>[ROW_KEY(r), r]));
+  const items = addedTodayList.map(it => rowByKey.get(it.key) || it);
   const count = items.length;
   const listHtml = count===0
     ? '<div class="today-empty">오늘 새로 등록된 항목이 아직 없습니다.</div>'
@@ -681,8 +688,8 @@ function renderAddedTodayPanel(){
         <div class="today-item">
           <span class="cat-tag">${CAT_ICON[r.cat]||"📌"} ${r.cat}</span>
           <span class="tt">${r.title} · ${r.detail}</span>
-          ${badgeHtml(r)}
-          <span class="owners">${r.owners.join(", ")}</span>
+          ${r.statusKey ? badgeHtml(r) : ''}
+          <span class="owners">${(r.owners||[]).join(", ")}</span>
         </div>
       `).join("")}</div>`;
   panel.innerHTML = `<h2>🆕 오늘 추가한 일 <span class="cnt">${count}건</span></h2>${listHtml}`;
