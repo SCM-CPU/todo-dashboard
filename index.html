@@ -656,6 +656,23 @@ function lsSet(key, val){
 // 캐시된 예전 상태를 줄 때 매 폴링마다 있다/없다가 흔들려서 패널이 깜빡였다).
 // 한 번 "오늘 추가됨"으로 확정된 항목은 그날 안에는 다시 사라지지 않는다.
 let addedTodayList = lsGet("todoAddedTodayList_" + todayStr(), []);
+{
+  // 이전 저장 방식(키 문자열만 저장하던 버전)에 남아있던 기록을 새 방식으로 이전 복구
+  const legacyKeys = lsGet("todoAddedToday_" + todayStr(), null);
+  if(legacyKeys && Array.isArray(legacyKeys)){
+    const existing = new Set(addedTodayList.map(it=>it.key));
+    let migrated = false;
+    legacyKeys.forEach(k=>{
+      if(!existing.has(k)){
+        const [cat="", title="", detail=""] = k.split("||");
+        addedTodayList.push({key:k, cat, title, detail});
+        existing.add(k);
+        migrated = true;
+      }
+    });
+    if(migrated) lsSet("todoAddedTodayList_" + todayStr(), addedTodayList);
+  }
+}
 let addedTodayKeys = new Set(addedTodayList.map(it=>it.key));
 
 function trackNewRows(rows){
