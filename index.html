@@ -639,8 +639,6 @@ function renderWeekPanel(){
 // "오늘 추가한 일": 구글시트에 저장된 생성일시가 없어서, 이 브라우저가 마지막으로 확인한 상태와
 // 비교해 새로 생긴 행을 감지 → 오늘 날짜로 브라우저에 누적 기록해서 보여준다.
 // (이 대시보드가 열려있던 동안 감지된 것만 잡히며, 브라우저별로 별도 기록됨)
-const ROW_KEY = r => `${r.cat}||${r.title}||${r.detail}`;
-
 function todayStr(){
   const d = new Date(); const p = n=>String(n).padStart(2,"0");
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
@@ -655,49 +653,46 @@ function lsSet(key, val){
 // 스냅샷 자체를 append-only로 저장한다 (키만 저장하면, 구글시트 게시 CSV가 순간적으로
 // 캐시된 예전 상태를 줄 때 매 폴링마다 있다/없다가 흔들려서 패널이 깜빡였다).
 // 한 번 "오늘 추가됨"으로 확정된 항목은 그날 안에는 다시 사라지지 않는다.
-let addedTodayList = lsGet("todoAddedTodayList_" + todayStr(), []);
-{
-  // 이전 저장 방식(키 문자열만 저장하던 버전)에 남아있던 기록을 새 방식으로 이전 복구
-  const legacyKeys = lsGet("todoAddedToday_" + todayStr(), null);
-  if(legacyKeys && Array.isArray(legacyKeys)){
-    const existing = new Set(addedTodayList.map(it=>it.key));
-    let migrated = false;
-    legacyKeys.forEach(k=>{
-      if(!existing.has(k)){
-        const [cat="", title="", detail=""] = k.split("||");
-        addedTodayList.push({key:k, cat, title, detail});
-        existing.add(k);
-        migrated = true;
-      }
-    });
-    if(migrated) lsSet("todoAddedTodayList_" + todayStr(), addedTodayList);
-  }
+// 새 항목 판단은 텍스트 내용이 아니라 "행 개수가 늘었는지"로 한다 - 카테고리→내용→세부내용을
+// 나눠서 입력하면 그때마다 텍스트가 달라져 같은 행이 여러 개로 쪼개져 잡히는 문제가 있었다.
+if(!lsGet("todoAddedTodaySchemaV2", false)){
+  // 이전(텍스트 기준) 방식 기록은 신뢰할 수 없어 정리하고 새 기준으로 다시 시작
+  lsSet("todoAddedTodayList_" + todayStr(), []);
+  lsSet("todoAddedTodaySchemaV2", true);
 }
+let addedTodayList = lsGet("todoAddedTodayList_" + todayStr(), []);
 let addedTodayKeys = new Set(addedTodayList.map(it=>it.key));
 
 function trackNewRows(rows){
-  const currentKeys = rows.map(ROW_KEY);
-  const lastKnown = lsGet("todoLastKnownKeys", null);
-  if(lastKnown !== null){
-    const lastSet = new Set(lastKnown);
+  const currentCount = rows.length;
+  const maxKnown = lsGet("todoMaxRowCount", null);
+  if(maxKnown !== null && currentCount > maxKnown){
     let changed = false;
-    rows.forEach(r=>{
-      const k = ROW_KEY(r);
-      if(!lastSet.has(k) && !addedTodayKeys.has(k)){
-        addedTodayKeys.add(k);
-        addedTodayList.push({key:k, cat:r.cat, title:r.title, detail:r.detail});
+    for(let idx = maxKnown; idx < currentCount; idx++){
+      const posKey = "pos:" + idx;
+      if(!addedTodayKeys.has(posKey)){
+        const r = rows[idx];
+        addedTodayKeys.add(posKey);
+        addedTodayList.push({key:posKey, cat:r.cat, title:r.title, detail:r.detail});
         changed = true;
       }
-    });
+    }
     if(changed) lsSet("todoAddedTodayList_" + todayStr(), addedTodayList);
   }
-  lsSet("todoLastKnownKeys", currentKeys);
+  if(maxKnown === null || currentCount > maxKnown){
+    lsSet("todoMaxRowCount", currentCount);
+  }
 }
 
 function renderAddedTodayPanel(){
   const panel = document.getElementById("addedTodayPanel");
-  const rowByKey = new Map(ROWS.map(r=>[ROW_KEY(r), r]));
-  const items = addedTodayList.map(it => rowByKey.get(it.key) || it);
+  const items = addedTodayList.map(it=>{
+    if(it.key.startsWith("pos:")){
+      const idx = parseInt(it.key.slice(4), 10);
+      return ROWS[idx] || it;
+    }
+    return it;
+  });
   const count = items.length;
   const listHtml = count===0
     ? '<div class="today-empty">오늘 새로 등록된 항목이 아직 없습니다.</div>'
