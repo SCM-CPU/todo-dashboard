@@ -679,6 +679,7 @@ function commitAddedTodaySettle(){
   addedTodayDebounceTimer = null;
   const rows = addedTodayLatestRows;
   if(!rows) return;
+  const currentKeySet = new Set(rows.map(ROW_KEY));
   const settledKeysRaw = lsGet("todoSettledKeys", null);
   if(settledKeysRaw !== null){
     const settledSet = new Set(settledKeysRaw);
@@ -691,6 +692,11 @@ function commitAddedTodaySettle(){
         changed = true;
       }
     });
+    // settle 시점 기준으로 더 이상 존재하지 않는(수정/삭제된) 옛 버전은 정리
+    const before = addedTodayList.length;
+    addedTodayList = addedTodayList.filter(it => currentKeySet.has(it.key));
+    addedTodayKeys = new Set(addedTodayList.map(it=>it.key));
+    if(addedTodayList.length !== before) changed = true;
     if(changed) lsSet("todoAddedTodayList_" + todayStr(), addedTodayList);
   }
   lsSet("todoSettledKeys", rows.map(ROW_KEY));
