@@ -387,7 +387,7 @@ function renderKpiMonthly(k){
   const heads = k.monthly.map(x=>`<th>${x.m}월</th>`).join("");
   const row = (label, field, unit) => `<tr><td>${label}</td>` +
     k.monthly.map(x=>`<td${x[field]==null?' class="empty"':''}>${x[field]!=null?x[field]+unit:'-'}</td>`).join("") + `</tr>`;
-  const rows = k.monthlyRows.map(r=>row(r.label,r.field,r.unit||k.monthlyUnit)).join("");
+  const rows = k.monthlyRows.map(r=>row(r.label,r.field,r.unit!==undefined?r.unit:k.monthlyUnit)).join("");
   return `
     <div class="kpi-monthly">
       <div class="kpi-monthly-base"><span>${k.monthlyBase}</span><span class="kpi-monthly-unit">(단위: 억 원)</span></div>
