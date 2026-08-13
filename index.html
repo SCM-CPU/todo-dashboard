@@ -359,8 +359,9 @@ const CAT_ICON = {
 const KPI_DATA = [
   { cls:"kpi-direct", icon:"🔄", label:"직거래 활성화", value:"33%", target:"목표 50%",
     pct:Math.round((33-18)/(50-18)*100), valueNote:"(잔여 gap 17%p, 연 매출 목표 3,300억)",
-    monthlyBase:"25년 18%",
-    // 출처: 직거래현황_26.7.xlsx · 정리 시트 (제약=대웅제약, 그룹사=그룹사 계) · 8~12월은 마감 후 갱신
+    monthlyBase:"25년 18%", monthlyUnit:"%",
+    monthlyRows:[{label:"제약",field:"pharma"},{label:"그룹",field:"group"}],
+    // 출처: 직거래현황_26.7.xlsx · 정리 시트 (제약=대웅제약, 그룹=그룹사 계) · 8~12월은 마감 후 갱신
     monthly:[
       {m:1, pharma:26, group:21}, {m:2, pharma:26, group:19}, {m:3, pharma:31, group:26},
       {m:4, pharma:38, group:32}, {m:5, pharma:36, group:30}, {m:6, pharma:38, group:32},
@@ -368,7 +369,14 @@ const KPI_DATA = [
       {m:10, pharma:null, group:null}, {m:11, pharma:null, group:null}, {m:12, pharma:null, group:null}
     ] },
   { cls:"kpi-vc", icon:"🏬", label:"VC 활성화", value:"월 31억", target:"목표 월 110억",
-    pct:Math.round((31-10)/(110-10)*100), sub:"25년 월 10억 → 26년 6월 월 31억 (잔여 gap 월 79억)" },
+    pct:Math.round((31-10)/(110-10)*100), valueNote:"(잔여 gap 월 79억)",
+    monthlyBase:"25년 월 10억", monthlyUnit:"억",
+    monthlyRows:[{label:"실적",field:"val"}],
+    monthly:[
+      {m:1, val:null}, {m:2, val:null}, {m:3, val:null}, {m:4, val:null}, {m:5, val:null},
+      {m:6, val:31}, {m:7, val:null}, {m:8, val:null}, {m:9, val:null},
+      {m:10, val:null}, {m:11, val:null}, {m:12, val:null}
+    ] },
   { cls:"kpi-svc", icon:"⭐", label:"블록형 거점 도매 서비스", value:"4/5 업체 · 10/11 권역", target:"목표 5개업체 / 11개권역 S",
     pct:Math.round(10/11*100), achieved:false, sub:"아이팜코리아(대구) 1개 업체만 A등급 · 나머지 4개 업체·10개 권역 S등급 → 5개 업체 전원 S 달성해야 목표 충족(미달성)" }
 ];
@@ -376,13 +384,14 @@ const KPI_DATA = [
 function renderKpiMonthly(k){
   const heads = k.monthly.map(x=>`<th>${x.m}월</th>`).join("");
   const row = (label, field) => `<tr><td>${label}</td>` +
-    k.monthly.map(x=>`<td${x[field]==null?' class="empty"':''}>${x[field]!=null?x[field]+'%':'-'}</td>`).join("") + `</tr>`;
+    k.monthly.map(x=>`<td${x[field]==null?' class="empty"':''}>${x[field]!=null?x[field]+k.monthlyUnit:'-'}</td>`).join("") + `</tr>`;
+  const rows = k.monthlyRows.map(r=>row(r.label,r.field)).join("");
   return `
     <div class="kpi-monthly">
       <div class="kpi-monthly-base">${k.monthlyBase}</div>
       <table class="kpi-monthly-table">
         <thead><tr><th>26년</th>${heads}</tr></thead>
-        <tbody>${row("제약","pharma")}${row("그룹사","group")}</tbody>
+        <tbody>${rows}</tbody>
       </table>
     </div>`;
 }
