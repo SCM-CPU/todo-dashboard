@@ -360,12 +360,12 @@ const CAT_ICON = {
 const KPI_DATA = [
   { cls:"kpi-direct", icon:"🔄", label:"직거래 활성화", value:"33%", target:"목표 50%",
     pct:Math.round((33-18)/(50-18)*100), valueNote:"(잔여 gap 17%p, 연 매출 목표 3,300억)",
-    monthlyBase:"25년 18%", monthlyUnit:"%",
+    monthlyBase:"25년 18%, 월평균 129억", monthlyUnit:"%",
     monthlyRows:[{label:"제약",field:"pharma"},{label:"그룹",field:"group"},{label:"매출",field:"revenue",unit:""}],
     // 출처: 직거래현황_26.7.xlsx · 정리 시트 (제약=대웅제약, 그룹=그룹사 계) · 8~12월은 마감 후 갱신
     monthly:[
-      {m:1, pharma:26, group:21, revenue:null}, {m:2, pharma:26, group:19, revenue:null}, {m:3, pharma:31, group:26, revenue:null},
-      {m:4, pharma:38, group:32, revenue:202}, {m:5, pharma:36, group:30, revenue:null}, {m:6, pharma:38, group:32, revenue:204},
+      {m:1, pharma:26, group:21, revenue:125}, {m:2, pharma:26, group:19, revenue:116}, {m:3, pharma:31, group:26, revenue:156},
+      {m:4, pharma:38, group:32, revenue:202}, {m:5, pharma:36, group:30, revenue:190}, {m:6, pharma:38, group:32, revenue:208},
       {m:7, pharma:41, group:33, revenue:235}, {m:8, pharma:null, group:null, revenue:null}, {m:9, pharma:null, group:null, revenue:null},
       {m:10, pharma:null, group:null, revenue:null}, {m:11, pharma:null, group:null, revenue:null}, {m:12, pharma:null, group:null, revenue:null}
     ] },
