@@ -89,6 +89,13 @@
   .kpi-monthly-table th:first-child, .kpi-monthly-table td:first-child{width:24px; font-weight:700; color:var(--sub); background:var(--hover);}
   .kpi-monthly-table td.empty{color:var(--sub); opacity:.35; font-weight:400;}
 
+  .kpi-sla{margin-top:6px; padding-top:6px; border-top:1px dashed var(--border);}
+  .kpi-sla-title{font-size:10px; color:var(--sub); font-weight:600; margin-bottom:3px;}
+  .kpi-sla-table{width:100%; border-collapse:collapse;}
+  .kpi-sla-table td{border:1px solid var(--border); padding:2px 6px; font-size:10px;}
+  .kpi-sla-table td:first-child{width:56px; font-weight:700; color:var(--sub); background:var(--hover); white-space:nowrap;}
+  .kpi-sla-table td:last-child{font-weight:700; color:var(--text);}
+
   .section-title{font-size:14.5px; font-weight:700; margin:0 0 10px; display:flex; align-items:center; gap:6px;}
 
   .gap-panel{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px;}
@@ -226,6 +233,10 @@
     .kpi-monthly{margin-top:3px; padding-top:4px;}
     .kpi-monthly-base{font-size:6.5px; margin-bottom:2px;}
     .kpi-monthly-table th, .kpi-monthly-table td{font-size:5.5px; padding:1px 0;}
+    .kpi-sla{margin-top:3px; padding-top:4px;}
+    .kpi-sla-title{font-size:6.5px; margin-bottom:2px;}
+    .kpi-sla-table td{font-size:5.5px; padding:1px 3px;}
+    .kpi-sla-table td:first-child{width:36px;}
     .gap-panel{gap:6px; margin-bottom:8px;}
     .gap-list{gap:3px;}
     .gap-item{font-size:8px; gap:4px;}
@@ -379,8 +390,14 @@ const KPI_DATA = [
       {m:6, val:31}, {m:7, val:32}, {m:8, val:null}, {m:9, val:null},
       {m:10, val:null}, {m:11, val:null}, {m:12, val:null}
     ] },
-  { cls:"kpi-svc", icon:"⭐", label:"블록형 거점 도매 서비스", value:"4/5 업체 · 10/11 권역", target:"목표 5개업체 / 11개권역 S",
-    pct:Math.round(10/11*100), achieved:false, sub:"아이팜코리아(대구) 1개 업체만 A등급 · 나머지 4개 업체·10개 권역 S등급 → 5개 업체 전원 S 달성해야 목표 충족(미달성)" }
+  { cls:"kpi-svc", icon:"⭐", label:"블록형 거점 도매 서비스", value:"5/5 업체 · 11/11 권역", target:"목표 5개업체 / 11개권역 S",
+    pct:Math.round(11/11*100), achieved:true, sub:"7월 평가에서 대구아이팜코리아 S등급 상향 → 5개 업체 · 11개 권역 전원 S등급 달성",
+    // 출처: SLA평가/7월/SLA 평가 종합_완료_7월_2차 완료.xlsx · 종합 관리장 시트
+    sla:[
+      {label:"거점도매", text:"S 11/11 (전원 달성)"},
+      {label:"종합도매", text:"A1 · B1 · C1 · D6"},
+      {label:"VC", text:"B2 · D1"}
+    ] }
 ];
 
 function renderKpiMonthly(k){
@@ -398,6 +415,15 @@ function renderKpiMonthly(k){
     </div>`;
 }
 
+function renderKpiSla(k){
+  const rows = k.sla.map(s=>`<tr><td>${s.label}</td><td>${s.text}</td></tr>`).join("");
+  return `
+    <div class="kpi-sla">
+      <div class="kpi-sla-title">7월 SLA 평가</div>
+      <table class="kpi-sla-table"><tbody>${rows}</tbody></table>
+    </div>`;
+}
+
 function renderKpiPanel(){
   const el = document.getElementById("kpiPanel");
   el.innerHTML = KPI_DATA.map(k=>`
@@ -407,6 +433,7 @@ function renderKpiPanel(){
       <span class="kpi-target">${k.target}</span>
       <div class="kpi-bar"><div class="fill" style="width:${Math.min(100,Math.max(0,k.pct))}%"></div></div>
       ${k.monthly?renderKpiMonthly(k):`<div class="kpi-sub">${k.sub}</div>`}
+      ${k.sla?renderKpiSla(k):''}
     </div>
   `).join("");
 }
