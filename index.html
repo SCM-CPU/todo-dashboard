@@ -94,7 +94,7 @@
   .kpi-sla-table{width:100%; border-collapse:collapse;}
   .kpi-sla-table td{border:1px solid var(--border); padding:2px 6px; font-size:10px;}
   .kpi-sla-table td:first-child{width:56px; font-weight:700; color:var(--sub); background:var(--hover); white-space:nowrap;}
-  .kpi-sla-table td:last-child{font-weight:700; color:var(--text);}
+  .kpi-sla-table td:last-child{font-weight:700; color:var(--text); cursor:help;}
 
   .section-title{font-size:14.5px; font-weight:700; margin:0 0 10px; display:flex; align-items:center; gap:6px;}
 
@@ -394,9 +394,12 @@ const KPI_DATA = [
     pct:Math.round(11/11*100), achieved:true, sub:"7월 평가에서 대구아이팜코리아 S등급 상향 → 5개 업체 · 11개 권역 전원 S등급 달성",
     // 출처: SLA평가/7월/SLA 평가 종합_완료_7월_2차 완료.xlsx · 종합 관리장 시트
     sla:[
-      {label:"거점도매", text:"S 11/11 (전원 달성)"},
-      {label:"종합도매", text:"A1 · B1 · C1 · D6"},
-      {label:"VC", text:"B2 · D1"}
+      {label:"거점도매", text:"S 11/11 (전원 달성)",
+        detail:"S: 영남백제,김포이지메디컴,파주백제,평택복산나이스,부산복산나이스,대전백제,광주유진약품,향남이지메디컴,평택백제,원주백제,대구아이팜코리아"},
+      {label:"종합도매", text:"A1 · B1 · C1 · D6",
+        detail:"A: 대전백제 / B: 광주유진약품 / C: 파주백제 / D: 영남백제,원주백제,부산복산나이스,평택복산나이스,대구아이팜코리아,인천약품"},
+      {label:"VC", text:"B2 · D1",
+        detail:"B: 인천약품,복산나이스 / D: 백제약품"}
     ] }
 ];
 
@@ -416,7 +419,7 @@ function renderKpiMonthly(k){
 }
 
 function renderKpiSla(k){
-  const rows = k.sla.map(s=>`<tr><td>${s.label}</td><td>${s.text}</td></tr>`).join("");
+  const rows = k.sla.map(s=>`<tr><td>${s.label}</td><td title="${s.detail||''}">${s.text}</td></tr>`).join("");
   return `
     <div class="kpi-sla">
       <div class="kpi-sla-title">7월 SLA 평가</div>
