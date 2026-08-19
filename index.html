@@ -64,6 +64,8 @@
 
   .kpi-panel{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px;}
   .kpi-card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px 18px; box-shadow:var(--shadow); border-top:3px solid var(--blue);}
+  a.kpi-card-link{display:block; text-decoration:none; color:inherit; cursor:pointer; transition:box-shadow .15s,transform .15s;}
+  a.kpi-card-link:hover{box-shadow:0 6px 20px rgba(0,0,0,.14); transform:translateY(-1px);}
   .kpi-card.kpi-vc{border-top-color:var(--purple);}
   .kpi-card.kpi-svc{border-top-color:var(--amber);}
   .kpi-head{display:flex; align-items:center; gap:7px; margin-bottom:8px;}
@@ -381,6 +383,7 @@ const KPI_DATA = [
       {m:10, pharma:null, group:null, revenue:null}, {m:11, pharma:null, group:null, revenue:null}, {m:12, pharma:null, group:null, revenue:null}
     ] },
   { cls:"kpi-vc", icon:"🏬", label:"VC 활성화", value:"월 32억", target:"목표 월 110억",
+    link:"file:///C:/Users/USER/Downloads/블럭형%20거점%20도매/병원%20직거래/VC매출_타겟처_대시보드.html",
     pct:Math.round((32-10)/(110-10)*100), valueNote:"(잔여 gap 월 78억)",
     monthlyBase:"25년 월 10억", monthlyUnit:"억",
     monthlyRows:[{label:"매출",field:"val",unit:""}],
@@ -429,16 +432,20 @@ function renderKpiSla(k){
 
 function renderKpiPanel(){
   const el = document.getElementById("kpiPanel");
-  el.innerHTML = KPI_DATA.map(k=>`
-    <div class="kpi-card ${k.cls}">
+  el.innerHTML = KPI_DATA.map(k=>{
+    const tag = k.link ? "a" : "div";
+    const linkAttrs = k.link ? ` href="${k.link}" title="VC매출 타겟처 대시보드 열기 (본인 PC 로컬 파일 - 다른 PC에서는 열리지 않음)"` : "";
+    return `
+    <${tag} class="kpi-card ${k.cls}${k.link?' kpi-card-link':''}"${linkAttrs}>
       <div class="kpi-head"><span class="kpi-icon">${k.icon}</span><span class="kpi-label">${k.label}</span></div>
       <div class="kpi-value">${k.value}${k.achieved?'<span class="kpi-achieved">달성</span>':''}${k.valueNote?`<span class="kpi-value-note">${k.valueNote}</span>`:''}</div>
       <span class="kpi-target">${k.target}</span>
       <div class="kpi-bar"><div class="fill" style="width:${Math.min(100,Math.max(0,k.pct))}%"></div></div>
       ${k.monthly?renderKpiMonthly(k):`<div class="kpi-sub">${k.sub}</div>`}
       ${k.sla?renderKpiSla(k):''}
-    </div>
-  `).join("");
+    </${tag}>
+  `;
+  }).join("");
 }
 
 // 출처: 유통지원팀 26년 상반기 성과 및 하반기 전략(최종).xlsx · ■ 하반기 전략 (GAP을 메우기 위해 할일)
