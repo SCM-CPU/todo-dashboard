@@ -480,7 +480,7 @@ function renderGapPanel(){
     <div class="kpi-card ${g.cls}">
       <div class="kpi-head"><span class="kpi-icon">${g.icon}</span><span class="kpi-label">${g.label}</span></div>
       <ul class="gap-list">
-        ${g.items.map(i=>`<li class="gap-item">${i.impact?`<span class="gap-impact">+${i.impact}억</span>`:''}${i.text}</li>`).join("")}
+        ${g.items.map(i=>`<li class="gap-item">${i.impact?`<span class="gap-impact">+${i.impact}억</span>`:''}<span class="gap-text">${i.text}</span></li>`).join("")}
       </ul>
       ${total>0?`<div class="gap-total">예상 효과 합계 <b>+${total}억</b></div>`:''}
     </div>`;
