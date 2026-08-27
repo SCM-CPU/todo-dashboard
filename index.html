@@ -135,6 +135,18 @@
   .controls button{padding:9px 14px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); cursor:pointer; font-size:13px;}
   .controls button:hover{background:var(--hover);}
 
+  .month-summary{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px 18px; margin-bottom:20px; box-shadow:var(--shadow); border-top:3px solid var(--blue);}
+  .ms-head{font-size:15px; font-weight:800; margin-bottom:12px;}
+  .ms-total{font-size:12px; font-weight:700; color:var(--sub); margin-left:6px;}
+  .ms-body{column-count:3; column-gap:20px;}
+  .ms-cat{break-inside:avoid; margin-bottom:12px;}
+  .ms-cat-head{font-size:12.5px; font-weight:700; color:var(--sub); margin-bottom:4px; display:flex; align-items:center; gap:5px;}
+  .ms-cat-count{font-size:10.5px; font-weight:700; color:var(--blue); background:var(--hover); border-radius:10px; padding:0 6px;}
+  .ms-topic{margin:0 0 8px; font-size:12.5px; color:var(--text);}
+  .ms-topic:last-child{margin-bottom:0;}
+  .ms-topic-list{margin:2px 0 0; padding-left:16px; line-height:1.55;}
+  .ms-topic-list li{margin-bottom:1px;}
+  @media (max-width:900px){ .ms-body{column-count:1;} }
   .catnav{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;}
   .catnav a{font-size:12.3px; padding:6px 12px; border-radius:20px; background:var(--panel); border:1px solid var(--border); color:var(--text); text-decoration:none; display:flex; align-items:center; gap:5px; box-shadow:var(--shadow);}
   .catnav a:hover{background:var(--hover);}
@@ -327,10 +339,19 @@
       <option value="todo">미완료</option>
       <option value="overdue">지연</option>
     </select>
+    <select id="fMonth" title="선택하면 해당 월에 완료한 일만 모아서 보여줍니다">
+      <option value="">월별 완료내역</option>
+      <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option>
+      <option value="4">4월</option><option value="5">5월</option><option value="6">6월</option>
+      <option value="7">7월</option><option value="8">8월</option><option value="9">9월</option>
+      <option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
+    </select>
     <label class="chk"><input type="checkbox" id="fCollapse"> 완료 카테고리 접기</label>
     <button id="resetBtn">초기화</button>
     <span class="count" id="resultCount"></span>
   </div>
+
+  <div id="monthSummary"></div>
 
   <div class="catnav" id="catnav"></div>
 
@@ -891,12 +912,18 @@ function applyFilters(){
   const qDigits = toDigits(q);
   const dept = document.getElementById("fDept").value;
   const status = document.getElementById("fStatus").value;
+  const month = document.getElementById("fMonth").value;
 
   let rows = ROWS.filter(r=>{
     if(dept && !r.depts.includes(dept)) return false;
     if(status==="done" && !r.done) return false;
     if(status==="todo" && r.done) return false;
     if(status==="overdue" && r.statusKey!=="overdue") return false;
+    if(month){
+      if(!r.done) return false;
+      const mm = r.ddate ? parseInt(r.ddate.slice(5,7),10) : null;
+      if(mm !== parseInt(month,10)) return false;
+    }
     if(q){
       const hay = [r.title,r.detail,r.result,r.cat,r.ddText,r.ddate,...r.owners,...r.depts].join(" ").toLowerCase();
       const textMatch = hay.includes(q);
@@ -909,17 +936,52 @@ function applyFilters(){
   renderStats(rows);
   renderCatNav(rows);
   renderCategories(rows);
+  renderMonthSummary(month ? rows : null, month);
   document.getElementById("resultCount").textContent = `${rows.length} / ${ROWS.length}건 표시`;
+}
+
+function renderMonthSummary(rows, month){
+  const el = document.getElementById("monthSummary");
+  if(!rows){ el.innerHTML = ""; return; }
+  const byCat = {};
+  rows.forEach(r=>{
+    (byCat[r.cat] = byCat[r.cat] || []).push(r);
+  });
+  const cats = Object.keys(byCat).map(cat=>{
+    const byTitle = {};
+    byCat[cat].forEach(r=>{ (byTitle[r.title||cat] = byTitle[r.title||cat] || []).push(r); });
+    const topics = Object.keys(byTitle).map(title=>{
+      const items = byTitle[title].map(r=>{
+        const d = r.detail || r.title;
+        return `<li>${r.result ? `${d} — ${r.result}` : d}</li>`;
+      }).join("");
+      return `<div class="ms-topic"><b>${title}</b><ul class="ms-topic-list">${items}</ul></div>`;
+    }).join("");
+    return `
+    <div class="ms-cat">
+      <div class="ms-cat-head">${CAT_ICON[cat]||"•"} ${cat} <span class="ms-cat-count">${byCat[cat].length}</span></div>
+      ${topics}
+    </div>
+  `;
+  }).join("");
+  el.innerHTML = `
+    <div class="month-summary">
+      <div class="ms-head">📋 ${month}월 완료 업무 요약 <span class="ms-total">${rows.length}건</span></div>
+      <div class="ms-body">${cats}</div>
+    </div>
+  `;
 }
 
 document.getElementById("search").addEventListener("input", applyFilters);
 document.getElementById("fDept").addEventListener("change", applyFilters);
 document.getElementById("fStatus").addEventListener("change", applyFilters);
 document.getElementById("fCollapse").addEventListener("change", applyFilters);
+document.getElementById("fMonth").addEventListener("change", applyFilters);
 document.getElementById("resetBtn").addEventListener("click", ()=>{
   document.getElementById("search").value="";
   document.getElementById("fDept").value="";
   document.getElementById("fStatus").value="";
+  document.getElementById("fMonth").value="";
   document.getElementById("fCollapse").checked=false;
   applyFilters();
 });
