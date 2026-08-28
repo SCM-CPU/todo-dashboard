@@ -64,8 +64,8 @@
 
   .kpi-panel{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px;}
   .kpi-card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px 18px; box-shadow:var(--shadow); border-top:3px solid var(--blue);}
-  .kpi-card-link{cursor:pointer; transition:box-shadow .15s,transform .15s;}
-  .kpi-card-link:hover{box-shadow:0 6px 20px rgba(0,0,0,.14); transform:translateY(-1px);}
+  a.kpi-label-link{color:inherit; text-decoration:underline; text-underline-offset:2px; cursor:pointer;}
+  a.kpi-label-link:hover{color:var(--blue);}
   .kpi-card.kpi-vc{border-top-color:var(--purple);}
   .kpi-card.kpi-svc{border-top-color:var(--amber);}
   .kpi-head{display:flex; align-items:center; gap:7px; margin-bottom:8px;}
@@ -457,17 +457,18 @@ function renderKpiSla(k){
 function renderKpiPanel(){
   const el = document.getElementById("kpiPanel");
   el.innerHTML = KPI_DATA.map(k=>{
-    const tag = k.link ? "a" : "div";
-    const linkAttrs = k.link ? ` href="${k.link}"${k.linkBlank?' target="_blank" rel="noopener"':''} title="${k.linkTitle||(k.label+' 바로가기')}"` : "";
+    const labelHtml = k.link
+      ? `<a class="kpi-label kpi-label-link" href="${k.link}"${k.linkBlank?' target="_blank" rel="noopener"':''} title="${k.linkTitle||(k.label+' 바로가기')}">${k.label}</a>`
+      : `<span class="kpi-label">${k.label}</span>`;
     return `
-    <${tag} class="kpi-card ${k.cls}${k.link?' kpi-card-link':''}"${linkAttrs}>
-      <div class="kpi-head"><span class="kpi-icon">${k.icon}</span><span class="kpi-label">${k.label}</span></div>
+    <div class="kpi-card ${k.cls}">
+      <div class="kpi-head"><span class="kpi-icon">${k.icon}</span>${labelHtml}</div>
       <div class="kpi-value">${k.value}${k.achieved?'<span class="kpi-achieved">달성</span>':''}${k.valueNote?`<span class="kpi-value-note">${k.valueNote}</span>`:''}</div>
       <span class="kpi-target">${k.target}</span>
       <div class="kpi-bar"><div class="fill" style="width:${Math.min(100,Math.max(0,k.pct))}%"></div></div>
       ${k.monthly?renderKpiMonthly(k):`<div class="kpi-sub">${k.sub}</div>`}
       ${k.sla?renderKpiSla(k):''}
-    </${tag}>
+    </div>
   `;
   }).join("");
 }
