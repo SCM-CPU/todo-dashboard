@@ -315,6 +315,7 @@
       <button id="syncNowBtn" title="페이지를 최신 버전으로 새로고침합니다 (Ctrl+F5와 동일)">🔄 새로고침</button>
       <button id="deliveryDashBtn">🚚 도매배송현황</button>
       <button id="dwLogisticsBtn">🚚 대웅물류현황</button>
+      <button id="logiReportBtn" title="물류현황리포트 열기 (물류현황리포트_프로토콜_등록.reg 등록된 PC에서만 작동)">📄 물류현황리포트</button>
       <button id="printBtn">🖨 PDF로 출력</button>
     </div>
   </header>
@@ -1002,6 +1003,7 @@ document.getElementById("syncNowBtn").addEventListener("click", ()=>{
 document.getElementById("printBtn").addEventListener("click", ()=>window.print());
 document.getElementById("deliveryDashBtn").addEventListener("click", ()=>window.open("https://scm-cpu.github.io/SCM/","_blank"));
 document.getElementById("dwLogisticsBtn").addEventListener("click", ()=>window.open("http://10.1.205.46:5175/","_blank"));
+document.getElementById("logiReportBtn").addEventListener("click", ()=>window.location.href="logireport://open");
 
 function startApp(){
   renderKpiPanel();
