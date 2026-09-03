@@ -403,11 +403,11 @@ const KPI_DATA = [
     pct:Math.round((34-18)/(50-18)*100), valueNote:"(잔여 gap 16%p, 연 매출 목표 3,300억)",
     monthlyBase:"25년 18%, 월평균 129억", monthlyUnit:"%",
     monthlyRows:[{label:"제약",field:"pharma"},{label:"그룹",field:"group"},{label:"직거래",field:"revenue",unit:""},{label:"거점",field:"hub",unit:""},{label:"비거점",field:"nonhub",unit:""}],
-    // 출처: 직거래현황_26.8_마감작업.xlsx · 정리 시트(제약=대웅제약, 그룹=그룹사 계, 직거래) · 거점도매(매출) 시트 월별 총합계(대웅+바이오+한올, 병원+로컬+기타) · 비거점은 7월만 반영, 8~12월은 마감 후 갱신
+    // 출처: 직거래현황_26.8_마감작업.xlsx · 정리 시트(제약=대웅제약, 그룹=그룹사 계, 직거래) · 거점도매(매출) 시트 월별 총합계(대웅+바이오+한올, 병원+로컬+기타), VAT 10% 제외(÷1.1) · 비거점은 7월만 반영, 8~12월은 마감 후 갱신
     monthly:[
-      {m:1, pharma:26, group:21, revenue:125, hub:514, nonhub:null}, {m:2, pharma:26, group:19, revenue:116, hub:528, nonhub:null}, {m:3, pharma:31, group:26, revenue:156, hub:484, nonhub:null},
-      {m:4, pharma:38, group:32, revenue:202, hub:482, nonhub:null}, {m:5, pharma:36, group:30, revenue:190, hub:479, nonhub:null}, {m:6, pharma:38, group:32, revenue:208, hub:495, nonhub:null},
-      {m:7, pharma:41, group:33, revenue:236, hub:526, nonhub:55}, {m:8, pharma:44, group:34, revenue:218, hub:466, nonhub:null}, {m:9, pharma:null, group:null, revenue:null, hub:null, nonhub:null},
+      {m:1, pharma:26, group:21, revenue:125, hub:467, nonhub:null}, {m:2, pharma:26, group:19, revenue:116, hub:480, nonhub:null}, {m:3, pharma:31, group:26, revenue:156, hub:440, nonhub:null},
+      {m:4, pharma:38, group:32, revenue:202, hub:438, nonhub:null}, {m:5, pharma:36, group:30, revenue:190, hub:435, nonhub:null}, {m:6, pharma:38, group:32, revenue:208, hub:450, nonhub:null},
+      {m:7, pharma:41, group:33, revenue:236, hub:478, nonhub:55}, {m:8, pharma:44, group:34, revenue:218, hub:423, nonhub:null}, {m:9, pharma:null, group:null, revenue:null, hub:null, nonhub:null},
       {m:10, pharma:null, group:null, revenue:null, hub:null, nonhub:null}, {m:11, pharma:null, group:null, revenue:null, hub:null, nonhub:null}, {m:12, pharma:null, group:null, revenue:null, hub:null, nonhub:null}
     ] },
   { cls:"kpi-vc", icon:"🏬", label:"VC 활성화", value:"월 31.2억", target:"목표 월 110억",
