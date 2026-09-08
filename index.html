@@ -658,7 +658,7 @@ async function pollSheet(isManual){
 }
 
 function badgeHtml(row){
-  if(row.done) return '<span class="badge badge-done">✔ 완료</span>';
+  if(row.done) return '<span class="badge badge-done">✔ 완료 · '+row.ddText+'</span>';
   switch(row.statusKey){
     case "overdue": return '<span class="badge badge-overdue">⏰ 지연 · '+row.ddText+'</span>';
     case "today": return '<span class="badge badge-today">🔥 오늘마감</span>';
