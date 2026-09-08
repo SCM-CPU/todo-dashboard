@@ -60,7 +60,6 @@
   .pw-box button{width:100%; padding:10px; border-radius:8px; border:none; background:var(--blue); color:#fff; font-weight:700; font-size:14px; cursor:pointer;}
   .pw-box button:hover{filter:brightness(1.08);}
   .pw-error{color:var(--red); font-size:12.5px; margin-top:10px; min-height:16px;}
-  #appArea{display:none;}
 
   .kpi-panel{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px;}
   .kpi-card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px 18px; box-shadow:var(--shadow); border-top:3px solid var(--blue);}
@@ -291,17 +290,6 @@
 </head>
 <body>
 
-<div class="pw-gate" id="pwGate">
-  <div class="pw-box">
-    <div class="pw-icon">🔒</div>
-    <h2>유통지원 할일 대시보드</h2>
-    <p>비밀번호를 입력하세요</p>
-    <input type="password" id="pwInput" placeholder="비밀번호" autocomplete="off">
-    <button id="pwSubmit">확인</button>
-    <div class="pw-error" id="pwError"></div>
-  </div>
-</div>
-
 <div class="wrap" id="appArea">
 
   <header class="top">
@@ -386,10 +374,8 @@ window.addEventListener("unhandledrejection", e=>showFatalError("처리되지 �
 // 설정: 아래 두 값을 채워야 동작합니다.
 // SHEET_CSV_URL: 구글시트 "파일 > 공유 > 웹에 게시"에서 만든 CSV 링크
 //   (또는 링크 공유 상태에서 https://docs.google.com/spreadsheets/d/<ID>/export?format=csv&gid=<GID> 형태)
-// PASSWORD: 접속 비밀번호 (가벼운 진입장벽용 - 화면 소스를 보면 노출되는 수준의 보호입니다)
 // ============================================================
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSw7F56F3B-YfoUij840qxkG_teouueOdvnHfOnFVEsd0pvjN8A6wt7ZED5YIqvu0ZaqF2-wE564hI3/pub?gid=0&single=true&output=csv";
-const PASSWORD = "1234";
 
 const CAT_ICON = {
   "블록형 거점 도매":"📦","평가안 고도화":"📊","클레임 채널 고도화":"📮","배송":"🚚",
@@ -1017,28 +1003,7 @@ function startApp(){
   setInterval(()=>pollSheet(false), 15000);
 }
 
-function unlock(){
-  document.getElementById("pwGate").style.display = "none";
-  document.getElementById("appArea").style.display = "block";
-  startApp();
-}
-
-document.getElementById("pwSubmit").addEventListener("click", ()=>{
-  const pw = document.getElementById("pwInput").value;
-  if(pw === PASSWORD){
-    sessionStorage.setItem("todoDashAuthed", "1");
-    unlock();
-  } else {
-    document.getElementById("pwError").textContent = "비밀번호가 올바르지 않습니다.";
-  }
-});
-document.getElementById("pwInput").addEventListener("keydown", e=>{
-  if(e.key === "Enter") document.getElementById("pwSubmit").click();
-});
-
-if(sessionStorage.getItem("todoDashAuthed") === "1"){
-  unlock();
-}
+startApp();
 
 const scrollTopBtn = document.getElementById("scrollTopBtn");
 window.addEventListener("scroll", ()=>{
