@@ -97,7 +97,7 @@
     <p class="note">"수시", "~9월"처럼 정확한 날짜가 없는 미팅·회의 건은 달력에 표시가 안 돼서 여기 따로 모아뒀어요.</p>
   </div>
 
-  <p class="note">구글시트 할일 리스트의 내용·세부내용에 "미팅" 또는 "회의"가 포함된 항목 중, 주인이 박중문·정상문 둘뿐인 건(팀 내부 업무)은 제외하고 표시합니다 (약 15초 주기 갱신). 현재는 전부 사내미팅으로 표시되며, 외부미팅 표시는 추후 별도 "일정" 탭 연동 후 반영됩니다.</p>
+  <p class="note">구글시트 할일 리스트의 내용·세부내용에 "미팅" 또는 "회의"가 포함된 항목 중, 주인이 박중문·정상문 둘뿐인 건(팀 내부 업무)은 제외하고 표시합니다 (약 15초 주기 갱신). 외부/사내 구분은 시트의 "일정" 컬럼값을 그대로 따릅니다.</p>
 </div>
 
 <script>
@@ -149,8 +149,7 @@ function splitMulti(str){
 }
 
 // 주인이 팀 내부(박중문/정상문)뿐이면 "우리팀 안에서의 일"이라 일정표에 넣지 않음.
-// 그 외 이름이 하나라도 섞여 있으면 일단 사내미팅(파랑)으로 본다 — 외부미팅(빨강) 표시는
-// 추후 사용자가 시트에 별도 "일정" 탭을 만들어 "외부"라고 표시하면 그걸 우선 반영할 예정(아직 미연동).
+// 외부/사내 구분은 시트의 "일정" 컬럼값을 그대로 사용 — "외부"면 외부(빨강), 그 외(공백/"사내")는 사내(파랑).
 const TEAM_ONLY = ["박중문","정상문"];
 function isTeamOnly(owners){
   return owners.length>0 && owners.every(o => TEAM_ONLY.includes(o));
@@ -163,7 +162,7 @@ function buildMeetings(table){
   if(table.length < 2) return [];
   const header = table[0].map(h=>h.trim());
   const idx = name => header.indexOf(name);
-  const cTitle=idx("내용"), cDetail=idx("세부내용"), cDue=idx("기한"), cOwner=idx("주인"), cDept=idx("담당부서");
+  const cTitle=idx("내용"), cDetail=idx("세부내용"), cDue=idx("기한"), cOwner=idx("주인"), cDept=idx("담당부서"), cSched=idx("일정");
   const out = [];
   for(let r=1;r<table.length;r++){
     const row = table[r];
@@ -177,9 +176,10 @@ function buildMeetings(table){
     const owners = (row[cOwner]||"").split(",").map(s=>s.trim()).filter(Boolean);
     if(isTeamOnly(owners)) continue;
     const depts = splitMulti(row[cDept]);
+    const sched = (row[cSched]||"").trim();
     out.push({
       title, detail, ddText, dtype:dd.type, ddate:dd.date,
-      owners, depts, cls:"int"
+      owners, depts, cls: sched==="외부" ? "ext" : "int"
     });
   }
   return out;
