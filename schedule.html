@@ -151,8 +151,10 @@ function splitMulti(str){
   return (str||"").split(/\r?\n|\s+\/\s+/).map(s=>s.trim()).filter(Boolean);
 }
 
+const INT_OVERRIDE_KEYWORDS = ["CH사업부"]; // 회사 내부 조직명이지만 EXT_KEYWORDS와 겹치는 단어(예: 약국)를 포함할 수 있어 우선 적용
+
 function classify(hay){
-  const h = hay.toLowerCase();
+  if(INT_OVERRIDE_KEYWORDS.some(k => hay.includes(k))) return "int";
   return EXT_KEYWORDS.some(k => hay.includes(k)) ? "ext" : "int";
 }
 
