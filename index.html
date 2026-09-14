@@ -304,6 +304,7 @@
       <button id="deliveryDashBtn">🚚 도매배송현황</button>
       <button id="dwLogisticsBtn">🚚 대웅물류현황</button>
       <button id="epmBtn">📈 EPM</button>
+      <button id="scheduleBtn">📅 일정표</button>
       <button id="printBtn">🖨 PDF로 출력</button>
     </div>
   </header>
@@ -993,6 +994,7 @@ document.getElementById("printBtn").addEventListener("click", ()=>window.print()
 document.getElementById("deliveryDashBtn").addEventListener("click", ()=>window.open("https://scm-vercel-deploy.vercel.app/","_blank"));
 document.getElementById("dwLogisticsBtn").addEventListener("click", ()=>window.open("http://10.1.205.71:5175/","_blank"));
 document.getElementById("epmBtn").addEventListener("click", ()=>window.open("https://epm2026.vercel.app/dashboard","_blank"));
+document.getElementById("scheduleBtn").addEventListener("click", ()=>window.open("schedule.html","_blank"));
 
 function startApp(){
   renderKpiPanel();

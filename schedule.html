@@ -88,6 +88,7 @@
     <div class="ym" id="ymLabel"></div>
     <button id="nextBtn">다음달 ▶</button>
     <button id="todayBtn">오늘</button>
+    <button id="refreshBtn">🔄 새로고침</button>
   </div>
 
   <div class="grid" id="calGrid"></div>
@@ -272,6 +273,7 @@ document.getElementById("todayBtn").addEventListener("click", ()=>{
   const n = new Date(); viewYear = n.getFullYear(); viewMonth = n.getMonth()+1;
   renderCalendar();
 });
+document.getElementById("refreshBtn").addEventListener("click", pollSheet);
 
 pollSheet();
 setInterval(pollSheet, 15000);
