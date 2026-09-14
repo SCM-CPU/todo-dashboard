@@ -246,7 +246,10 @@ function renderCalendar(){
   for(let d=1; d<=daysInMonth; d++){
     const dateStr = `${viewYear}-${pad(viewMonth)}-${pad(d)}`;
     const items = byDate[dateStr] || [];
-    const chips = items.map(m=>`<div class="chip ${m.cls}${m.done?' done':''}" title="${(m.title+' — '+m.detail).replace(/"/g,'&quot;')}">${m.done?'✔ ':''}${m.time?m.time+' ':''}${m.detail||m.title}</div>`).join("");
+    const chips = items.map(m=>{
+      const tip = m.title + (m.detail?' — '+m.detail:'') + (m.owners&&m.owners.length?'\n주인: '+m.owners.join(', '):'');
+      return `<div class="chip ${m.cls}${m.done?' done':''}" title="${tip.replace(/"/g,'&quot;')}">${m.done?'✔ ':''}${m.time?m.time+' ':''}${m.detail||m.title}</div>`;
+    }).join("");
     html += `<div class="cell ${dateStr===todayStr?'today':''}"><div class="daynum">${d}</div>${chips}</div>`;
   }
   const totalCells = startWeekday + daysInMonth;
@@ -262,7 +265,7 @@ function renderCalendar(){
   if(unsched.length){
     box.style.display = "block";
     document.getElementById("unschedList").innerHTML = unsched.map(m=>`
-      <div class="u-item">
+      <div class="u-item" title="${m.owners&&m.owners.length?('주인: '+m.owners.join(', ')).replace(/"/g,'&quot;'):''}">
         <span class="u-tag ${m.cls}">${m.cls==='ext'?'외부':'사내'}</span>
         <span class="u-due">${m.ddText||'-'}${m.time?' '+m.time:''}</span>
         <span${m.done?' style="text-decoration:line-through;opacity:0.55;"':''}>${m.done?'✔ ':''}${m.title}${m.detail?' — '+m.detail:''}</span>
