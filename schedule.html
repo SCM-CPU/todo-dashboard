@@ -7,12 +7,12 @@
 <style>
   :root{
     --bg:#f5f7fb; --panel:#ffffff; --text:#1a1d29; --sub:#5b6272; --border:#e5e8f0;
-    --blue:#2563eb; --blue-bg:#eaf1ff; --orange:#ea580c; --orange-bg:#fff1e6;
+    --blue:#2563eb; --blue-bg:#eaf1ff; --orange:#dc2626; --orange-bg:#fde8e8;
   }
   @media (prefers-color-scheme: dark){
     :root{
       --bg:#12141c; --panel:#1a1d29; --text:#eef0f6; --sub:#9aa1b3; --border:#2b2f3d;
-      --blue:#5b93ff; --blue-bg:#1c2942; --orange:#ff9a52; --orange-bg:#3a2718;
+      --blue:#5b93ff; --blue-bg:#1c2942; --orange:#f87171; --orange-bg:#3a1414;
     }
   }
   *{box-sizing:border-box;}
@@ -97,14 +97,11 @@
     <p class="note">"수시", "~9월"처럼 정확한 날짜가 없는 미팅·회의 건은 달력에 표시가 안 돼서 여기 따로 모아뒀어요.</p>
   </div>
 
-  <p class="note">구글시트 할일 리스트의 내용·세부내용에 "미팅" 또는 "회의"가 포함된 항목만 골라 자동으로 표시합니다 (약 15초 주기 갱신). 외부/사내 구분은 거래처·기관명 키워드 기반 자동 분류라 100% 정확하지 않을 수 있어요 — 잘못 분류된 항목이 있으면 알려주세요.</p>
+  <p class="note">구글시트 할일 리스트의 내용·세부내용에 "미팅" 또는 "회의"가 포함된 항목 중, 주인이 박중문·정상문 둘뿐인 건(팀 내부 업무)은 제외하고 표시합니다 (약 15초 주기 갱신). 현재는 전부 사내미팅으로 표시되며, 외부미팅 표시는 추후 별도 "일정" 탭 연동 후 반영됩니다.</p>
 </div>
 
 <script>
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSw7F56F3B-YfoUij840qxkG_teouueOdvnHfOnFVEsd0pvjN8A6wt7ZED5YIqvu0ZaqF2-wE564hI3/pub?gid=0&single=true&output=csv";
-
-const EXT_KEYWORDS = ["백제","복산","인천약품","이지메디컴","유진약품","아이팜","더샵","지구홀딩스",
-  "기자","협회","도매상","도매사","약국","업체","매체","언론","약사공론","데일리팜","약업신문","더팩트"];
 
 function parseCSV(text){
   const rows = [];
@@ -151,11 +148,12 @@ function splitMulti(str){
   return (str||"").split(/\r?\n|\s+\/\s+/).map(s=>s.trim()).filter(Boolean);
 }
 
-const INT_OVERRIDE_KEYWORDS = ["CH사업부"]; // 회사 내부 조직명이지만 EXT_KEYWORDS와 겹치는 단어(예: 약국)를 포함할 수 있어 우선 적용
-
-function classify(hay){
-  if(INT_OVERRIDE_KEYWORDS.some(k => hay.includes(k))) return "int";
-  return EXT_KEYWORDS.some(k => hay.includes(k)) ? "ext" : "int";
+// 주인이 팀 내부(박중문/정상문)뿐이면 "우리팀 안에서의 일"이라 일정표에 넣지 않음.
+// 그 외 이름이 하나라도 섞여 있으면 일단 사내미팅(파랑)으로 본다 — 외부미팅(빨강) 표시는
+// 추후 사용자가 시트에 별도 "일정" 탭을 만들어 "외부"라고 표시하면 그걸 우선 반영할 예정(아직 미연동).
+const TEAM_ONLY = ["박중문","정상문"];
+function isTeamOnly(owners){
+  return owners.length>0 && owners.every(o => TEAM_ONLY.includes(o));
 }
 
 let MEETINGS = []; // {date, type(date/adhoc/monthend), title, detail, ddText, owners, cls}
@@ -177,10 +175,11 @@ function buildMeetings(table){
     const ddText = (row[cDue]||"").trim();
     const dd = parseDeadlineJS(ddText);
     const owners = (row[cOwner]||"").split(",").map(s=>s.trim()).filter(Boolean);
+    if(isTeamOnly(owners)) continue;
     const depts = splitMulti(row[cDept]);
     out.push({
       title, detail, ddText, dtype:dd.type, ddate:dd.date,
-      owners, depts, cls: classify(detail + " " + depts.join(" "))
+      owners, depts, cls:"int"
     });
   }
   return out;
