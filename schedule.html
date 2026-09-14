@@ -165,18 +165,21 @@ const RECURRING = [
   { weekday: 1, time: "08:30", detail: "팀장 주간회의", cls: "int" }
 ];
 
-function getRecurringForMonth(year, month, todayStr){
+function getRecurringForMonth(year, month){
   const daysInMonth = new Date(year, month, 0).getDate();
   const pad = n=>String(n).padStart(2,"0");
+  const now = new Date();
   const out = [];
   for(let d=1; d<=daysInMonth; d++){
     const dateStr = `${year}-${pad(month)}-${pad(d)}`;
     const weekday = new Date(year, month-1, d).getDay();
     RECURRING.forEach(r=>{
       if(r.weekday !== weekday) return;
+      const [hh, mm] = r.time.split(":").map(Number);
+      const occursAt = new Date(year, month-1, d, hh, mm);
       out.push({
         title: r.detail, detail: r.detail, ddText: r.time, dtype:"date", ddate: dateStr,
-        owners: [], depts: [], cls: r.cls, done: dateStr < todayStr, time: r.time
+        owners: [], depts: [], cls: r.cls, done: occursAt < now, time: r.time
       });
     });
   }
@@ -232,7 +235,7 @@ function renderCalendar(){
   const todayStr = new Date().toISOString().slice(0,10);
 
   const byDate = {};
-  getRecurringForMonth(viewYear, viewMonth, todayStr).forEach(m=>{
+  getRecurringForMonth(viewYear, viewMonth).forEach(m=>{
     (byDate[m.ddate] = byDate[m.ddate] || []).push(m);
   });
   MEETINGS.filter(m=>m.dtype==="date").forEach(m=>{
