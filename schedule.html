@@ -97,7 +97,7 @@
     <p class="note">"수시", "~9월"처럼 정확한 날짜가 없는 미팅·회의 건은 달력에 표시가 안 돼서 여기 따로 모아뒀어요.</p>
   </div>
 
-  <p class="note">구글시트 할일 리스트의 내용·세부내용에 "미팅" 또는 "회의"가 포함된 항목 중, 주인이 박중문·정상문 둘뿐인 건(팀 내부 업무)은 제외하고 표시합니다 (약 15초 주기 갱신). 외부/사내 구분은 시트의 "일정" 컬럼값을 그대로 따릅니다.</p>
+  <p class="note">구글시트 할일 리스트에서 "일정" 칸에 사내/외부가 표시된 행만 골라 자동으로 표시합니다 (약 15초 주기 갱신). "일정" 칸이 비어있으면 표시되지 않습니다.</p>
 </div>
 
 <script>
@@ -148,13 +148,8 @@ function splitMulti(str){
   return (str||"").split(/\r?\n|\s+\/\s+/).map(s=>s.trim()).filter(Boolean);
 }
 
-// 주인이 팀 내부(박중문/정상문)뿐이면 "우리팀 안에서의 일"이라 일정표에 넣지 않음.
-// 외부/사내 구분은 시트의 "일정" 컬럼값을 그대로 사용 — "외부"면 외부(빨강), 그 외(공백/"사내")는 사내(파랑).
-const TEAM_ONLY = ["박중문","정상문"];
-function isTeamOnly(owners){
-  return owners.length>0 && owners.every(o => TEAM_ONLY.includes(o));
-}
-
+// 일정표에 넣을지 말지는 "미팅/회의" 같은 단어가 아니라, 시트의 "일정" 칸에 값이 채워져 있는지로 정한다
+// (사용자가 직접 "사내"/"외부"로 태그한 행만 표시 — 태그 안 한 행은 제외).
 let MEETINGS = []; // {date, type(date/adhoc/monthend), title, detail, ddText, owners, cls}
 let viewYear, viewMonth; // 1-indexed month
 
@@ -166,17 +161,15 @@ function buildMeetings(table){
   const out = [];
   for(let r=1;r<table.length;r++){
     const row = table[r];
+    const sched = (row[cSched]||"").trim();
+    if(!sched) continue;
     const title = (row[cTitle]||"").trim();
     const detail = (row[cDetail]||"").trim();
     if(!title && !detail) continue;
-    const hay = title + " " + detail;
-    if(!/미팅|회의/.test(hay)) continue;
     const ddText = (row[cDue]||"").trim();
     const dd = parseDeadlineJS(ddText);
     const owners = (row[cOwner]||"").split(",").map(s=>s.trim()).filter(Boolean);
-    if(isTeamOnly(owners)) continue;
     const depts = splitMulti(row[cDept]);
-    const sched = (row[cSched]||"").trim();
     out.push({
       title, detail, ddText, dtype:dd.type, ddate:dd.date,
       owners, depts, cls: sched==="외부" ? "ext" : "int"
