@@ -216,7 +216,9 @@ function renderCalendar(){
 
   grid.innerHTML = html;
 
-  const unsched = MEETINGS.filter(m=>m.dtype!=="date");
+  // "~9월"처럼 월말로 계산되는 monthend 타입은 지난 달이면 이미 지난 일정이므로 제외한다.
+  // "수시" 같은 adhoc 타입은 날짜 자체가 없어 지났는지 판단할 수 없으니 그대로 둔다.
+  const unsched = MEETINGS.filter(m=>m.dtype!=="date" && !(m.dtype==="monthend" && m.ddate < todayStr));
   const box = document.getElementById("unschedBox");
   if(unsched.length){
     box.style.display = "block";
