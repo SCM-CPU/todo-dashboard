@@ -37,18 +37,20 @@
   .nav button:hover{border-color:var(--blue);}
   .nav .ym{font-size:17px; font-weight:700; min-width:110px; text-align:center;}
   .grid{
-    display:grid; grid-template-columns:repeat(7,1fr); gap:6px;
+    display:grid; grid-template-columns:repeat(5,1fr); gap:6px;
     background:var(--border); border:1px solid var(--border); border-radius:10px; overflow:hidden;
   }
   .dow{background:var(--panel); text-align:center; font-size:12px; color:var(--sub); padding:6px 0; font-weight:600;}
-  .dow.sun{color:var(--orange);} .dow.sat{color:var(--blue);}
-  .cell{background:var(--panel); min-height:100px; padding:6px; display:flex; flex-direction:column; gap:3px;}
+  .cell{
+    background:var(--panel); height:110px; padding:6px; display:flex; flex-direction:column; gap:3px;
+    overflow-y:auto; box-sizing:border-box;
+  }
   .cell.pad{background:var(--bg);}
   .cell.today{outline:2px solid var(--blue); outline-offset:-2px;}
-  .daynum{font-size:12px; color:var(--sub); font-weight:600; margin-bottom:2px;}
+  .daynum{font-size:12px; color:var(--sub); font-weight:600; margin-bottom:2px; flex:none;}
   .chip{
     font-size:10.5px; line-height:1.35; padding:2px 6px; border-radius:5px; cursor:default;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:none;
   }
   .chip.ext{background:var(--orange-bg); color:var(--orange);}
   .chip.int{background:var(--blue-bg); color:var(--blue);}
@@ -65,7 +67,7 @@
   .u-due{color:var(--sub); flex:none;}
   .note{color:var(--sub); font-size:11.5px; margin-top:10px; line-height:1.6;}
   @media (max-width:700px){
-    .cell{min-height:64px; font-size:10px;}
+    .cell{height:80px; font-size:10px;}
     .chip{font-size:9px;}
   }
 </style>
@@ -225,14 +227,21 @@ function buildMeetings(table){
 function renderCalendar(){
   const grid = document.getElementById("calGrid");
   document.getElementById("ymLabel").textContent = `${viewYear}년 ${viewMonth}월`;
-  const dowNames = ["일","월","화","수","목","금","토"];
-  let html = dowNames.map((d,i)=>`<div class="dow ${i===0?'sun':i===6?'sat':''}">${d}</div>`).join("");
+  const dowNames = ["월","화","수","목","금"];
+  let html = dowNames.map(d=>`<div class="dow">${d}</div>`).join("");
 
-  const first = new Date(viewYear, viewMonth-1, 1);
-  const startWeekday = first.getDay();
   const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
   const pad = n=>String(n).padStart(2,"0");
   const todayStr = new Date().toISOString().slice(0,10);
+
+  // 토·일은 회사 휴무라 아예 표시하지 않는다 — 월~금 평일만 5열로 배치.
+  const weekdays = [];
+  for(let d=1; d<=daysInMonth; d++){
+    const wd = new Date(viewYear, viewMonth-1, d).getDay();
+    if(wd>=1 && wd<=5) weekdays.push(d);
+  }
+  const firstWd = weekdays.length ? new Date(viewYear, viewMonth-1, weekdays[0]).getDay() : 1;
+  const startWeekday = firstWd - 1; // 월=0 ~ 금=4
 
   const byDate = {};
   getRecurringForMonth(viewYear, viewMonth).forEach(m=>{
@@ -243,7 +252,7 @@ function renderCalendar(){
   });
 
   for(let i=0;i<startWeekday;i++) html += `<div class="cell pad"></div>`;
-  for(let d=1; d<=daysInMonth; d++){
+  weekdays.forEach(d=>{
     const dateStr = `${viewYear}-${pad(viewMonth)}-${pad(d)}`;
     const items = byDate[dateStr] || [];
     const chips = items.map(m=>{
@@ -251,9 +260,9 @@ function renderCalendar(){
       return `<div class="chip ${m.cls}${m.done?' done':''}" title="${tip.replace(/"/g,'&quot;')}">${m.done?'✔ ':''}${m.time?m.time+' ':''}${m.detail||m.title}</div>`;
     }).join("");
     html += `<div class="cell ${dateStr===todayStr?'today':''}"><div class="daynum">${d}</div>${chips}</div>`;
-  }
-  const totalCells = startWeekday + daysInMonth;
-  const trailing = (7 - (totalCells % 7)) % 7;
+  });
+  const totalCells = startWeekday + weekdays.length;
+  const trailing = (5 - (totalCells % 5)) % 5;
   for(let i=0;i<trailing;i++) html += `<div class="cell pad"></div>`;
 
   grid.innerHTML = html;
