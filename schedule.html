@@ -97,7 +97,7 @@
     <p class="note">"수시", "~9월"처럼 정확한 날짜가 없는 미팅·회의 건은 달력에 표시가 안 돼서 여기 따로 모아뒀어요.</p>
   </div>
 
-  <p class="note">구글시트 할일 리스트에서 "일정" 칸에 사내/외부가 표시된 행만 골라 자동으로 표시합니다 (약 15초 주기 갱신). "일정" 칸이 비어있으면 표시되지 않습니다.</p>
+  <p class="note">구글시트 할일 리스트 기준 — "일정" 칸이 "외부"면 외부미팅, 칸이 비어있고 주인이 박중문·정상문뿐이면 제외, 그 외는 전부 사내미팅으로 표시합니다 (약 15초 주기 갱신). 일정표의 제목은 세부내용을 사용합니다.</p>
 </div>
 
 <script>
@@ -148,8 +148,13 @@ function splitMulti(str){
   return (str||"").split(/\r?\n|\s+\/\s+/).map(s=>s.trim()).filter(Boolean);
 }
 
-// 일정표에 넣을지 말지는 "미팅/회의" 같은 단어가 아니라, 시트의 "일정" 칸에 값이 채워져 있는지로 정한다
-// (사용자가 직접 "사내"/"외부"로 태그한 행만 표시 — 태그 안 한 행은 제외).
+// 반영 순서: ① "일정" 칸이 "외부"면 무조건 외부미팅. ② 칸이 비어있고 주인이 박중문/정상문뿐이면 제외
+// (우리팀 안에서의 일). ③ 나머지(칸이 비어있어도 다른 사람이 껴있거나, 칸이 "사내"인 경우)는 전부 사내미팅.
+const TEAM_ONLY = ["박중문","정상문"];
+function isTeamOnly(owners){
+  return owners.length>0 && owners.every(o => TEAM_ONLY.includes(o));
+}
+
 let MEETINGS = []; // {date, type(date/adhoc/monthend), title, detail, ddText, owners, cls}
 let viewYear, viewMonth; // 1-indexed month
 
@@ -162,17 +167,20 @@ function buildMeetings(table){
   for(let r=1;r<table.length;r++){
     const row = table[r];
     const sched = (row[cSched]||"").trim();
-    if(!sched) continue;
+    const owners = (row[cOwner]||"").split(",").map(s=>s.trim()).filter(Boolean);
+    let cls;
+    if(sched === "외부") cls = "ext";
+    else if(!sched && isTeamOnly(owners)) continue;
+    else cls = "int";
     const title = (row[cTitle]||"").trim();
     const detail = (row[cDetail]||"").trim();
     if(!title && !detail) continue;
     const ddText = (row[cDue]||"").trim();
     const dd = parseDeadlineJS(ddText);
-    const owners = (row[cOwner]||"").split(",").map(s=>s.trim()).filter(Boolean);
     const depts = splitMulti(row[cDept]);
     out.push({
       title, detail, ddText, dtype:dd.type, ddate:dd.date,
-      owners, depts, cls: sched==="외부" ? "ext" : "int"
+      owners, depts, cls
     });
   }
   return out;
@@ -199,7 +207,7 @@ function renderCalendar(){
   for(let d=1; d<=daysInMonth; d++){
     const dateStr = `${viewYear}-${pad(viewMonth)}-${pad(d)}`;
     const items = byDate[dateStr] || [];
-    const chips = items.map(m=>`<div class="chip ${m.cls}" title="${(m.title+' — '+m.detail).replace(/"/g,'&quot;')}">${m.title}</div>`).join("");
+    const chips = items.map(m=>`<div class="chip ${m.cls}" title="${(m.title+' — '+m.detail).replace(/"/g,'&quot;')}">${m.detail||m.title}</div>`).join("");
     html += `<div class="cell ${dateStr===todayStr?'today':''}"><div class="daynum">${d}</div>${chips}</div>`;
   }
   const totalCells = startWeekday + daysInMonth;
