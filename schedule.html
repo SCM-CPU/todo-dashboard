@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>유통지원팀 일정표</title>
+<style>
+  :root{
+    --bg:#f5f7fb; --panel:#ffffff; --text:#1a1d29; --sub:#5b6272; --border:#e5e8f0;
+    --blue:#2563eb; --blue-bg:#eaf1ff; --orange:#ea580c; --orange-bg:#fff1e6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#12141c; --panel:#1a1d29; --text:#eef0f6; --sub:#9aa1b3; --border:#2b2f3d;
+      --blue:#5b93ff; --blue-bg:#1c2942; --orange:#ff9a52; --orange-bg:#3a2718;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text); min-height:100vh;
+    font-family:"Pretendard","Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,sans-serif;
+    padding:20px;
+  }
+  .wrap{max-width:1100px; margin:0 auto;}
+  header{display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px; margin-bottom:16px;}
+  h1{font-size:22px; margin:0 0 4px;}
+  .sub{color:var(--sub); font-size:13px; margin:0;}
+  .legend{display:flex; gap:14px; align-items:center; font-size:12.5px; color:var(--sub);}
+  .dot{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px;}
+  .dot.ext{background:var(--orange);}
+  .dot.int{background:var(--blue);}
+  .nav{display:flex; align-items:center; gap:14px; margin-bottom:14px;}
+  .nav button{
+    background:var(--panel); border:1px solid var(--border); color:var(--text);
+    border-radius:8px; padding:6px 14px; cursor:pointer; font-size:14px; font-family:inherit;
+  }
+  .nav button:hover{border-color:var(--blue);}
+  .nav .ym{font-size:17px; font-weight:700; min-width:110px; text-align:center;}
+  .grid{
+    display:grid; grid-template-columns:repeat(7,1fr); gap:6px;
+    background:var(--border); border:1px solid var(--border); border-radius:10px; overflow:hidden;
+  }
+  .dow{background:var(--panel); text-align:center; font-size:12px; color:var(--sub); padding:6px 0; font-weight:600;}
+  .dow.sun{color:var(--orange);} .dow.sat{color:var(--blue);}
+  .cell{background:var(--panel); min-height:100px; padding:6px; display:flex; flex-direction:column; gap:3px;}
+  .cell.pad{background:var(--bg);}
+  .cell.today{outline:2px solid var(--blue); outline-offset:-2px;}
+  .daynum{font-size:12px; color:var(--sub); font-weight:600; margin-bottom:2px;}
+  .chip{
+    font-size:10.5px; line-height:1.35; padding:2px 6px; border-radius:5px; cursor:default;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .chip.ext{background:var(--orange-bg); color:var(--orange);}
+  .chip.int{background:var(--blue-bg); color:var(--blue);}
+  .unscheduled{
+    margin-top:24px; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:16px 18px;
+  }
+  .unscheduled h2{font-size:14px; margin:0 0 10px;}
+  .u-item{font-size:12.5px; padding:6px 0; border-bottom:1px solid var(--border); display:flex; gap:8px; align-items:baseline;}
+  .u-item:last-child{border-bottom:none;}
+  .u-tag{font-size:10px; padding:1px 6px; border-radius:5px; flex:none;}
+  .u-tag.ext{background:var(--orange-bg); color:var(--orange);}
+  .u-tag.int{background:var(--blue-bg); color:var(--blue);}
+  .u-due{color:var(--sub); flex:none;}
+  .note{color:var(--sub); font-size:11.5px; margin-top:10px; line-height:1.6;}
+  @media (max-width:700px){
+    .cell{min-height:64px; font-size:10px;}
+    .chip{font-size:9px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>📅 유통지원팀 일정표</h1>
+      <p class="sub" id="syncLabel">불러오는 중...</p>
+    </div>
+    <div class="legend">
+      <span><span class="dot ext"></span>외부미팅</span>
+      <span><span class="dot int"></span>사내미팅</span>
+    </div>
+  </header>
+
+  <div class="nav">
+    <button id="prevBtn">◀ 이전달</button>
+    <div class="ym" id="ymLabel"></div>
+    <button id="nextBtn">다음달 ▶</button>
+    <button id="todayBtn">오늘</button>
+  </div>
+
+  <div class="grid" id="calGrid"></div>
+
+  <div class="unscheduled" id="unschedBox" style="display:none;">
+    <h2>🗓 날짜 미정 (수시 / 기간형)</h2>
+    <div id="unschedList"></div>
+    <p class="note">"수시", "~9월"처럼 정확한 날짜가 없는 미팅·회의 건은 달력에 표시가 안 돼서 여기 따로 모아뒀어요.</p>
+  </div>
+
+  <p class="note">구글시트 할일 리스트의 내용·세부내용에 "미팅" 또는 "회의"가 포함된 항목만 골라 자동으로 표시합니다 (약 15초 주기 갱신). 외부/사내 구분은 거래처·기관명 키워드 기반 자동 분류라 100% 정확하지 않을 수 있어요 — 잘못 분류된 항목이 있으면 알려주세요.</p>
+</div>
+
+<script>
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSw7F56F3B-YfoUij840qxkG_teouueOdvnHfOnFVEsd0pvjN8A6wt7ZED5YIqvu0ZaqF2-wE564hI3/pub?gid=0&single=true&output=csv";
+
+const EXT_KEYWORDS = ["백제","복산","인천약품","이지메디컴","유진약품","아이팜","더샵","지구홀딩스",
+  "기자","협회","도매상","도매사","약국","업체","매체","언론","약사공론","데일리팜","약업신문","더팩트"];
+
+function parseCSV(text){
+  const rows = [];
+  let row = [], field = "", inQuotes = false;
+  for (let i=0; i<text.length; i++){
+    const c = text[i];
+    if(inQuotes){
+      if(c === '"'){
+        if(text[i+1] === '"'){ field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else {
+      if(c === '"') inQuotes = true;
+      else if(c === ','){ row.push(field); field=""; }
+      else if(c === '\r'){ }
+      else if(c === '\n'){ row.push(field); rows.push(row); row=[]; field=""; }
+      else field += c;
+    }
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  return rows.filter(r => !(r.length===1 && r[0].trim()===""));
+}
+
+function parseDeadlineJS(text){
+  const t = (text||"").trim();
+  if(!t || t === "수시") return {type:"adhoc", date:null};
+  const monthMatch = t.match(/(\d+)월/);
+  if(monthMatch){
+    const month = parseInt(monthMatch[1],10);
+    const year = new Date().getFullYear();
+    const pad = n=>String(n).padStart(2,"0");
+    const dayMatch = t.match(/(\d+)일/);
+    if(dayMatch){
+      const day = parseInt(dayMatch[1],10);
+      return {type:"date", date: `${year}-${pad(month)}-${pad(day)}`};
+    }
+    const lastDay = new Date(year, month, 0).getDate();
+    return {type:"monthend", date: `${year}-${pad(month)}-${pad(lastDay)}`};
+  }
+  return {type:"adhoc", date:null};
+}
+
+function splitMulti(str){
+  return (str||"").split(/\r?\n|\s+\/\s+/).map(s=>s.trim()).filter(Boolean);
+}
+
+function classify(hay){
+  const h = hay.toLowerCase();
+  return EXT_KEYWORDS.some(k => hay.includes(k)) ? "ext" : "int";
+}
+
+let MEETINGS = []; // {date, type(date/adhoc/monthend), title, detail, ddText, owners, cls}
+let viewYear, viewMonth; // 1-indexed month
+
+function buildMeetings(table){
+  if(table.length < 2) return [];
+  const header = table[0].map(h=>h.trim());
+  const idx = name => header.indexOf(name);
+  const cTitle=idx("내용"), cDetail=idx("세부내용"), cDue=idx("기한"), cOwner=idx("주인"), cDept=idx("담당부서");
+  const out = [];
+  for(let r=1;r<table.length;r++){
+    const row = table[r];
+    const title = (row[cTitle]||"").trim();
+    const detail = (row[cDetail]||"").trim();
+    if(!title && !detail) continue;
+    const hay = title + " " + detail;
+    if(!/미팅|회의/.test(hay)) continue;
+    const ddText = (row[cDue]||"").trim();
+    const dd = parseDeadlineJS(ddText);
+    const owners = (row[cOwner]||"").split(",").map(s=>s.trim()).filter(Boolean);
+    const depts = splitMulti(row[cDept]);
+    out.push({
+      title, detail, ddText, dtype:dd.type, ddate:dd.date,
+      owners, depts, cls: classify(detail + " " + depts.join(" "))
+    });
+  }
+  return out;
+}
+
+function renderCalendar(){
+  const grid = document.getElementById("calGrid");
+  document.getElementById("ymLabel").textContent = `${viewYear}년 ${viewMonth}월`;
+  const dowNames = ["일","월","화","수","목","금","토"];
+  let html = dowNames.map((d,i)=>`<div class="dow ${i===0?'sun':i===6?'sat':''}">${d}</div>`).join("");
+
+  const first = new Date(viewYear, viewMonth-1, 1);
+  const startWeekday = first.getDay();
+  const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
+  const pad = n=>String(n).padStart(2,"0");
+  const todayStr = new Date().toISOString().slice(0,10);
+
+  const byDate = {};
+  MEETINGS.filter(m=>m.dtype==="date").forEach(m=>{
+    (byDate[m.ddate] = byDate[m.ddate] || []).push(m);
+  });
+
+  for(let i=0;i<startWeekday;i++) html += `<div class="cell pad"></div>`;
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr = `${viewYear}-${pad(viewMonth)}-${pad(d)}`;
+    const items = byDate[dateStr] || [];
+    const chips = items.map(m=>`<div class="chip ${m.cls}" title="${(m.title+' — '+m.detail).replace(/"/g,'&quot;')}">${m.title}</div>`).join("");
+    html += `<div class="cell ${dateStr===todayStr?'today':''}"><div class="daynum">${d}</div>${chips}</div>`;
+  }
+  const totalCells = startWeekday + daysInMonth;
+  const trailing = (7 - (totalCells % 7)) % 7;
+  for(let i=0;i<trailing;i++) html += `<div class="cell pad"></div>`;
+
+  grid.innerHTML = html;
+
+  const unsched = MEETINGS.filter(m=>m.dtype!=="date");
+  const box = document.getElementById("unschedBox");
+  if(unsched.length){
+    box.style.display = "block";
+    document.getElementById("unschedList").innerHTML = unsched.map(m=>`
+      <div class="u-item">
+        <span class="u-tag ${m.cls}">${m.cls==='ext'?'외부':'사내'}</span>
+        <span class="u-due">${m.ddText||'-'}</span>
+        <span>${m.title}${m.detail?' — '+m.detail:''}</span>
+      </div>`).join("");
+  } else {
+    box.style.display = "none";
+  }
+}
+
+async function pollSheet(){
+  try{
+    const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes("?")?"&":"?") + "t=" + Date.now();
+    const res = await fetch(url);
+    const text = await res.text();
+    const table = parseCSV(text);
+    MEETINGS = buildMeetings(table);
+    document.getElementById("syncLabel").textContent = "마지막 갱신: " + new Date().toLocaleTimeString("ko-KR");
+    renderCalendar();
+  } catch(e){
+    document.getElementById("syncLabel").textContent = "동기화 실패 — 잠시 후 재시도";
+  }
+}
+
+const now = new Date();
+viewYear = now.getFullYear();
+viewMonth = now.getMonth()+1;
+
+document.getElementById("prevBtn").addEventListener("click", ()=>{
+  viewMonth--; if(viewMonth<1){viewMonth=12; viewYear--;}
+  renderCalendar();
+});
+document.getElementById("nextBtn").addEventListener("click", ()=>{
+  viewMonth++; if(viewMonth>12){viewMonth=1; viewYear++;}
+  renderCalendar();
+});
+document.getElementById("todayBtn").addEventListener("click", ()=>{
+  const n = new Date(); viewYear = n.getFullYear(); viewMonth = n.getMonth()+1;
+  renderCalendar();
+});
+
+pollSheet();
+setInterval(pollSheet, 15000);
+</script>
+</body>
+</html>
