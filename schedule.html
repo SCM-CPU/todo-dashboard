@@ -278,7 +278,7 @@ function renderCalendar(){
 async function pollSheet(){
   try{
     const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes("?")?"&":"?") + "t=" + Date.now();
-    const res = await fetch(url);
+    const res = await fetch(url, {cache:"no-store"});
     const text = await res.text();
     const table = parseCSV(text);
     MEETINGS = buildMeetings(table);
