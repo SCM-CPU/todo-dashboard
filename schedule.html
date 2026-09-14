@@ -52,6 +52,7 @@
   }
   .chip.ext{background:var(--orange-bg); color:var(--orange);}
   .chip.int{background:var(--blue-bg); color:var(--blue);}
+  .chip.done{text-decoration:line-through; opacity:0.55;}
   .unscheduled{
     margin-top:24px; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:16px 18px;
   }
@@ -162,7 +163,7 @@ function buildMeetings(table){
   if(table.length < 2) return [];
   const header = table[0].map(h=>h.trim());
   const idx = name => header.indexOf(name);
-  const cTitle=idx("내용"), cDetail=idx("세부내용"), cDue=idx("기한"), cOwner=idx("주인"), cDept=idx("담당부서"), cSched=idx("일정");
+  const cTitle=idx("내용"), cDetail=idx("세부내용"), cDue=idx("기한"), cOwner=idx("주인"), cDept=idx("담당부서"), cSched=idx("일정"), cCheck=idx("O / X");
   const out = [];
   for(let r=1;r<table.length;r++){
     const row = table[r];
@@ -178,9 +179,10 @@ function buildMeetings(table){
     const ddText = (row[cDue]||"").trim();
     const dd = parseDeadlineJS(ddText);
     const depts = splitMulti(row[cDept]);
+    const done = !!(row[cCheck]||"").trim();
     out.push({
       title, detail, ddText, dtype:dd.type, ddate:dd.date,
-      owners, depts, cls
+      owners, depts, cls, done
     });
   }
   return out;
@@ -207,7 +209,7 @@ function renderCalendar(){
   for(let d=1; d<=daysInMonth; d++){
     const dateStr = `${viewYear}-${pad(viewMonth)}-${pad(d)}`;
     const items = byDate[dateStr] || [];
-    const chips = items.map(m=>`<div class="chip ${m.cls}" title="${(m.title+' — '+m.detail).replace(/"/g,'&quot;')}">${m.detail||m.title}</div>`).join("");
+    const chips = items.map(m=>`<div class="chip ${m.cls}${m.done?' done':''}" title="${(m.title+' — '+m.detail).replace(/"/g,'&quot;')}">${m.done?'✔ ':''}${m.detail||m.title}</div>`).join("");
     html += `<div class="cell ${dateStr===todayStr?'today':''}"><div class="daynum">${d}</div>${chips}</div>`;
   }
   const totalCells = startWeekday + daysInMonth;
@@ -226,7 +228,7 @@ function renderCalendar(){
       <div class="u-item">
         <span class="u-tag ${m.cls}">${m.cls==='ext'?'외부':'사내'}</span>
         <span class="u-due">${m.ddText||'-'}</span>
-        <span>${m.title}${m.detail?' — '+m.detail:''}</span>
+        <span${m.done?' style="text-decoration:line-through;opacity:0.55;"':''}>${m.done?'✔ ':''}${m.title}${m.detail?' — '+m.detail:''}</span>
       </div>`).join("");
   } else {
     box.style.display = "none";
