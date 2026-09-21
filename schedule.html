@@ -173,6 +173,19 @@ const RECURRING = [
   { weekday: 1, time: "08:30", detail: "팀장 주간회의", cls: "int" }
 ];
 
+// 하루 안에서 시간의 흐름대로 정렬: 완료된 건을 먼저(시간순), 그다음 예정 건(시간순). 시간 없는 건은 각 그룹 끝.
+function timeKey(t){
+  const m = String(t||"").match(/(\d{1,2})\s*[:시]\s*(\d{0,2})/);
+  if(!m) return 9999;
+  let h = +m[1]; const mi = +(m[2]||0);
+  if(/오후|PM/i.test(t) && h<12) h+=12;
+  return h*60+mi;
+}
+function sortByFlow(items){
+  return items.map((m,i)=>[m,i]).sort((a,b)=>
+    (b[0].done?1:0)-(a[0].done?1:0) || timeKey(a[0].time)-timeKey(b[0].time) || a[1]-b[1]).map(x=>x[0]);
+}
+
 // 2026년 대한민국 공휴일(대체공휴일 포함). 주말에 해당하는 날은 캘린더가 평일만 보여주므로 표시되지 않는다.
 const HOLIDAYS = {
   "2026-01-01": "신정",
@@ -277,7 +290,7 @@ function renderCalendar(){
   weekdays.forEach(d=>{
     const dateStr = `${viewYear}-${pad(viewMonth)}-${pad(d)}`;
     const items = byDate[dateStr] || [];
-    const chips = items.map(m=>{
+    const chips = sortByFlow(items).map(m=>{
       const tip = m.title + (m.detail?' — '+m.detail:'') + (m.owners&&m.owners.length?'\n주인: '+m.owners.join(', '):'');
       return `<div class="chip ${m.cls}${m.done?' done':''}" title="${tip.replace(/"/g,'&quot;')}">${m.done?'✔ ':''}${m.time?m.time+' ':''}${m.detail||m.title}</div>`;
     }).join("");
