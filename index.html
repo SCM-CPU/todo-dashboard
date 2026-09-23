@@ -81,10 +81,10 @@
   .kpi-card.kpi-vc .kpi-icon{background:var(--purple-bg);}
   .kpi-card.kpi-svc .kpi-icon{background:var(--amber-bg);}
   .kpi-label{font-size:15px; font-weight:800; color:var(--text); letter-spacing:-.1px;}
-  .kpi-value{font-size:27px; font-weight:800; margin-bottom:2px; letter-spacing:-.02em; font-variant-numeric:tabular-nums; color:color-mix(in srgb, var(--blue) 20%, var(--text)); position:relative;}
+  .kpi-value{font-size:27px; font-weight:800; margin-bottom:2px; letter-spacing:-.02em; font-variant-numeric:tabular-nums; color:color-mix(in srgb, var(--blue) 20%, var(--text)); position:relative; line-height:1.3; min-height:70px;}
   .kpi-card.kpi-vc .kpi-value{color:color-mix(in srgb, var(--purple) 24%, var(--text));}
   .kpi-card.kpi-svc .kpi-value{color:color-mix(in srgb, var(--gold) 34%, var(--text));}
-  .kpi-target{display:block; font-size:12.5px; font-weight:600; color:var(--sub); margin-bottom:8px; position:relative;}
+  .kpi-target{display:block; font-size:12.5px; font-weight:600; color:var(--sub); margin-bottom:8px; position:relative; min-height:18px;}
   .kpi-bar{height:6px; border-radius:5px; background:var(--hover); overflow:hidden; margin:8px 0 7px; position:relative;}
   .kpi-bar .fill{height:100%; border-radius:5px; background:linear-gradient(90deg, var(--blue), color-mix(in srgb, var(--blue) 60%, #fff));}
   .kpi-vc .kpi-bar .fill{background:linear-gradient(90deg, var(--purple), color-mix(in srgb, var(--purple) 60%, #fff));}
@@ -113,8 +113,8 @@
   .kpi-sla-table td:first-child a:hover{color:var(--blue);}
   .kpi-sla-table td:last-child{font-weight:700; color:var(--text); cursor:help;}
 
-  .section-title{font-size:12px; font-weight:800; margin:24px 0 12px; display:flex; align-items:center; gap:8px; text-transform:uppercase; letter-spacing:.08em; color:var(--sub);}
-  .section-title::before{content:""; width:3px; height:14px; border-radius:2px; background:var(--gold); display:inline-block;}
+  .section-title{font-size:18px; font-weight:800; margin:26px 0 14px; display:flex; align-items:center; gap:9px; letter-spacing:-.1px; color:var(--text);}
+  .section-title::before{content:""; width:4px; height:19px; border-radius:2px; background:var(--gold); display:inline-block;}
 
   .gap-panel{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px;}
   .gap-list{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:7px;}
@@ -433,7 +433,7 @@ const KPI_DATA = [
     ] },
   { cls:"kpi-svc", icon:"⭐", label:"블록형 거점 도매 서비스", value:"5/5 업체 · 11/11 권역", target:"목표 5개업체 / 11개권역 S",
     link:"slaeval://open", linkBlank:true, linkTitle:"블록형 거점도매 평가시스템 열기 (Chrome으로 열림, 도매사 미오픈·관리자만 사용중)",
-    pct:Math.round(11/11*100), achieved:true, sub:"종합도매 D등급 6→5개사 개선(대전백제 S등급 상승)<br>VC도매 백제약품 D→B등급 상승(3사 전원 B)",
+    pct:Math.round(11/11*100), achieved:true, sub:"종합도매 D등급 6→5개사 개선(대전백제 S등급 상승)<br>VC 백제약품 D→B등급 상승(3사 전원 B)",
     // 출처: SLA평가/8월/SLA 평가 종합_완료_8월_1차.xlsx · 종합 관리장 시트
     sla:[
       {label:"거점도매", text:"S 11/11 (전원 달성)",
