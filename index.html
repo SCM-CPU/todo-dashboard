@@ -842,7 +842,7 @@ function commitAddedTodaySettle(){
 function renderAddedTodayPanel(){
   const panel = document.getElementById("addedTodayPanel");
   const rowByKey = new Map(ROWS.map(r=>[ROW_KEY(r), r]));
-  const items = addedTodayList.map(it => rowByKey.get(it.key) || it);
+  const items = addedTodayList.map(it => rowByKey.get(it.key) || it).filter(r => !r.done);
   const count = items.length;
   const listHtml = count===0
     ? '<div class="today-empty">오늘 새로 등록된 항목이 아직 없습니다.</div>'
