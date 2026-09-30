@@ -325,6 +325,7 @@
       <span class="sync-dot" id="syncDot"></span>
       <span id="syncLabel">불러오는 중...</span>
       <button id="syncNowBtn" title="페이지를 최신 버전으로 새로고침합니다 (Ctrl+F5와 동일)">🔄 새로고침</button>
+      <button id="logisticsBtn">📦 로직스</button>
       <button id="deliveryDashBtn">🚚 도매배송현황</button>
       <button id="dwLogisticsBtn">🚚 대웅물류현황</button>
       <button id="returnBtn">♻️ 환입·폐기</button>
@@ -1018,6 +1019,7 @@ document.getElementById("syncNowBtn").addEventListener("click", ()=>{
   location.href = location.pathname + "?t=" + Date.now();
 });
 document.getElementById("printBtn").addEventListener("click", ()=>window.print());
+document.getElementById("logisticsBtn").addEventListener("click", ()=>window.open("http://10.1.205.93:8000/","_blank"));
 document.getElementById("deliveryDashBtn").addEventListener("click", ()=>window.open("https://scm-vercel-deploy.vercel.app/","_blank"));
 document.getElementById("dwLogisticsBtn").addEventListener("click", ()=>window.open("http://10.1.205.93:5175/","_blank"));
 document.getElementById("epmBtn").addEventListener("click", ()=>window.open("https://epm2026.vercel.app/dashboard","_blank"));
