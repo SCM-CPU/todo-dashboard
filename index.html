@@ -437,14 +437,14 @@ const KPI_DATA = [
     ] },
   { cls:"kpi-svc", icon:"⭐", label:"블록형 거점 도매 서비스", value:"5/5 업체 · 11/11 권역", target:"목표 5개업체 / 11개권역 S",
     link:"slaeval://open", linkBlank:true, linkTitle:"블록형 거점도매 평가시스템 열기 (Chrome으로 열림, 도매사 미오픈·관리자만 사용중)",
-    pct:Math.round(11/11*100), achieved:true, sub:"종합도매 D등급 5→3개사 개선(평택·부산 복산나이스 D→C)<br>VC 백제·복산 B→C 하락(인천약품만 B 유지)",
-    // 출처: SLA평가/SLA 평가 종합_완료_9월_1차.xlsx · 종합 관리장 시트
+    pct:Math.round(11/11*100), achieved:true, sub:"종합도매 D등급 5→3개사 개선(평택·부산 복산나이스 D→C, 대전백제 S 유지)<br>VC 백제·복산 B→C 하락(인천약품만 B 유지)",
+    // 출처: SLA평가/SLA 평가 종합_완료_9월_2차.xlsx · 종합 관리장 시트
     sla:[
       {label:"거점도매", text:"S 11/11 (전원 달성)",
         detail:"S: 평택복산나이스,부산복산나이스,대전백제,광주유진약품,영남백제,향남이지메디컴,김포이지메디컴,원주백제,평택백제,파주백제,대구아이팜코리아"},
       {label:"종합도매",
-        text:"A1 · B2 · C3 · D3",
-        detail:"A: 원주백제 / B: 대전백제,광주유진약품 / C: 파주백제,평택복산나이스,부산복산나이스 / D: 영남백제,인천약품,대구아이팜코리아"},
+        text:"S1 · B3 · C2 · D3",
+        detail:"S: 대전백제 / B: 원주백제,광주유진약품,파주백제 / C: 평택복산나이스,부산복산나이스 / D: 대구아이팜코리아,영남백제,인천약품"},
       {label:"VC", labelLink:"https://script.google.com/macros/s/AKfycbz7CQu1gxzFQWtgu_BTommoaoWie4oHoN1BvhjBOG8cLItnGwL_qdwli6uF6L83J-I/exec", labelLinkBlank:true, labelLinkTitle:"VC 대시보드 열기",
         text:"B1 · C2",
         detail:"B: 인천약품 / C: 백제약품,복산나이스"}
@@ -473,7 +473,7 @@ function renderKpiSla(k){
   }).join("");
   return `
     <div class="kpi-sla">
-      <div class="kpi-sla-title">9월 SLA 평가(1차)</div>
+      <div class="kpi-sla-title">9월 SLA 평가(2차)</div>
       <table class="kpi-sla-table"><tbody>${rows}</tbody></table>
     </div>`;
 }
