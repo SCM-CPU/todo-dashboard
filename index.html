@@ -596,6 +596,7 @@ function renderGapPanel(){
 let ROWS = [], CATS = [], DEPTS = [];
 let DW_URL = "";  // 대웅물류현황 주소: 구글시트 L열 1행 값
 let DIRECT_URL = "";  // 직거래 활성화 주소: 구글시트 M열 1행 값
+let LOGISTICS_URL = "";  // 로직스 주소: 구글시트 N열 1행 값
 function applyDynamicLinks(){
   document.querySelectorAll('a[data-linkkey="directUrl"]').forEach(a=>{
     if(DIRECT_URL){ a.href = DIRECT_URL; }
@@ -644,6 +645,10 @@ function loadData(payload, flash){
   lastGeneratedAt = payload.generatedAt;
   DW_URL = payload.dwUrl || "";
   DIRECT_URL = payload.directUrl || "";
+  LOGISTICS_URL = payload.logisticsUrl || "";
+  const lgBtn = document.getElementById("logisticsBtn");
+  lgBtn.title = LOGISTICS_URL ? LOGISTICS_URL : "구글시트 N열 1행에 주소가 없습니다";
+  lgBtn.style.opacity = LOGISTICS_URL ? "" : ".5";
   applyDynamicLinks();
   const dwBtn = document.getElementById("dwLogisticsBtn");
   dwBtn.title = DW_URL ? DW_URL : "구글시트 L열 1행에 주소가 없습니다";
@@ -730,7 +735,8 @@ function buildPayloadFromTable(table){
   }
   const dwUrl = /^https?:\/\//i.test(header[11]||"") ? header[11] : "";
   const directUrl = /^https?:\/\//i.test(header[12]||"") ? header[12] : "";
-  return {generatedAt: new Date().toLocaleString("ko-KR"), rows, dwUrl, directUrl};
+  const logisticsUrl = /^https?:\/\//i.test(header[13]||"") ? header[13] : "";
+  return {generatedAt: new Date().toLocaleString("ko-KR"), rows, dwUrl, directUrl, logisticsUrl};
 }
 
 let lastRawCsv = null;
@@ -1088,7 +1094,7 @@ document.getElementById("syncNowBtn").addEventListener("click", ()=>{
   location.href = location.pathname + "?t=" + Date.now();
 });
 document.getElementById("printBtn").addEventListener("click", ()=>window.print());
-document.getElementById("logisticsBtn").addEventListener("click", ()=>window.open("http://10.1.204.120:8000/scm/","_blank"));
+document.getElementById("logisticsBtn").addEventListener("click", ()=>{ if(LOGISTICS_URL) window.open(LOGISTICS_URL,"_blank"); });
 document.getElementById("deliveryDashBtn").addEventListener("click", ()=>window.open("https://scm-vercel-deploy.vercel.app/","_blank"));
 document.getElementById("dwLogisticsBtn").addEventListener("click", ()=>{ if(DW_URL) window.open(DW_URL,"_blank"); });
 document.getElementById("epmBtn").addEventListener("click", ()=>window.open("https://epm2026.vercel.app/dashboard","_blank"));
