@@ -592,6 +592,7 @@ function renderGapPanel(){
 }
 
 let ROWS = [], CATS = [], DEPTS = [];
+let DW_URL = "";  // 대웅물류현황 주소: 구글시트 L열 1행 값
 let lastGeneratedAt = null;
 
 function computeRow(r, todayDate){
@@ -632,6 +633,10 @@ function loadData(payload, flash){
   CATS = [...new Set(ROWS.map(r=>r.cat))];
   DEPTS = [...new Set(ROWS.flatMap(r=>r.depts))];
   lastGeneratedAt = payload.generatedAt;
+  DW_URL = payload.dwUrl || "";
+  const dwBtn = document.getElementById("dwLogisticsBtn");
+  dwBtn.title = DW_URL ? DW_URL : "구글시트 L열 1행에 주소가 없습니다";
+  dwBtn.style.opacity = DW_URL ? "" : ".5";
   refreshDeptSelect();
   updateSyncLabel(flash);
   renderTodayPanel();
@@ -712,7 +717,8 @@ function buildPayloadFromTable(table){
     const kpi = (cKpi>=0 ? (row[cKpi]||"") : "").trim();
     rows.push({depts, cat, kpi, title, detail:(row[cDetail]||"").trim(), ddText, dtype:dd.type, ddate:dd.date, owners, done, result, attachment});
   }
-  return {generatedAt: new Date().toLocaleString("ko-KR"), rows};
+  const dwUrl = /^https?:\/\//i.test(header[11]||"") ? header[11] : "";
+  return {generatedAt: new Date().toLocaleString("ko-KR"), rows, dwUrl};
 }
 
 let lastRawCsv = null;
@@ -1072,7 +1078,7 @@ document.getElementById("syncNowBtn").addEventListener("click", ()=>{
 document.getElementById("printBtn").addEventListener("click", ()=>window.print());
 document.getElementById("logisticsBtn").addEventListener("click", ()=>window.open("http://10.1.204.120:8000/scm/","_blank"));
 document.getElementById("deliveryDashBtn").addEventListener("click", ()=>window.open("https://scm-vercel-deploy.vercel.app/","_blank"));
-document.getElementById("dwLogisticsBtn").addEventListener("click", ()=>window.open("http://10.1.204.120:5175/","_blank"));
+document.getElementById("dwLogisticsBtn").addEventListener("click", ()=>{ if(DW_URL) window.open(DW_URL,"_blank"); });
 document.getElementById("epmBtn").addEventListener("click", ()=>window.open("https://epm2026.vercel.app/dashboard","_blank"));
 document.getElementById("returnBtn").addEventListener("click", ()=>window.open("http://10.1.206.105:8080/%EB%8C%80%EC%8B%9C%EB%B3%B4%EB%93%9C/%EB%A7%A4%EC%B6%9C%ED%9D%90%EB%A6%84%EB%8F%84/index.html","_blank"));
 document.getElementById("scheduleBtn").addEventListener("click", ()=>window.open("schedule.html","_blank"));
