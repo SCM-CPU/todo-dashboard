@@ -691,9 +691,16 @@ function parseDeadlineJS(text){
   const monthMatch = t.match(/(\d+)월/);
   if(monthMatch){
     const month = parseInt(monthMatch[1],10);
-    const year = new Date().getFullYear();
     const pad = n=>String(n).padStart(2,"0");
     const dayMatch = t.match(/(\d+)일/);
+    // 연도: "27년"/"2027년"이 있으면 그대로, 없으면 올해. 단 6개월 넘게 지난 날짜는 내년으로 본다(예: 10월에 입력한 "1월 1일" = 내년)
+    const ym = t.match(/(\d{2,4})\s*년/);
+    let year = new Date().getFullYear();
+    if(ym){ year = parseInt(ym[1],10); if(year < 100) year += 2000; }
+    else {
+      const cand = new Date(year, month-1, dayMatch ? parseInt(dayMatch[1],10) : 1);
+      if(Date.now() - cand.getTime() > 183*86400000) year += 1;
+    }
     if(dayMatch){
       const day = parseInt(dayMatch[1],10);
       return {type:"date", date: `${year}-${pad(month)}-${pad(day)}`};
