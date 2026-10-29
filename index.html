@@ -468,8 +468,9 @@
     .p-cells .numcell{justify-content:flex-start;}
 
     /* VC 활성화 칸의 품절약 서재 문 (박중문 PC에서 서재가 켜져 있을 때만 열림) */
-    .slot-vc-door{align-self:flex-start; font-size:.85em; font-weight:600; color:var(--purple); text-decoration:none; padding:.15em .1em; border-bottom:1px dashed currentColor;}
+    .slot-vc-door{margin-left:auto; font-size:.8em; font-weight:600; color:var(--purple); text-decoration:none; white-space:nowrap; border-bottom:1px dashed currentColor;}
     .slot-vc-door:hover{opacity:.7;}
+    .slot-vc-door + .p-toggle{margin-left:.6em;}
     @media print{.slot-vc-door{display:none;}}
 
     /* ---- 오른쪽 어두운 오늘 패널 ---- */
@@ -890,12 +891,12 @@ function pillarHtml(k, kind){
   return `
   <section class="pillar p-${kind}" data-pillar="${kind}">
     <div class="p-head"><span class="kpi-icon">${k.icon}</span>${kpiLabelHtml(k)}
+      ${kind==="vc" ? '<a class="slot-vc-door" href="http://127.0.0.1:8765/" target="_blank" rel="noopener" title="품절약 서재 (박중문 PC에서 서재가 켜져 있을 때만 열림)">📚 품절약 협조 ▸</a>' : ''}
       <button type="button" class="p-toggle" data-toggle="pillar" aria-expanded="false">상세</button></div>
     <div class="p-body">
       ${numCellDirectVc(k, kind)}
       <div class="p-chart" data-toggle="pillar">${monthChart(k, kind, false)}</div>
     </div>
-    ${kind==="vc" ? '<a class="slot-vc-door" href="http://127.0.0.1:8765/" target="_blank" rel="noopener" title="품절약 서재 (박중문 PC에서 서재가 켜져 있을 때만 열림)">📚 품절약 협조 ▸</a>' : ''}
     <div class="p-detail">${detailBig}</div>
   </section>`;
 }
