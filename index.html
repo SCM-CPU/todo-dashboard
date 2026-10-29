@@ -360,8 +360,9 @@
     .sync-dot{background:var(--live); animation:live 2.4s ease-in-out infinite;}
     .sync-dot.flash{animation:pulse .9s ease, live 2.4s ease-in-out .9s infinite;}
     #syncNowBtn{color:#9fe8c1;}
+  }
 
-    /* ---- 첫 장면 격자 ---- */
+    /* ---- 첫 장면 격자 (화면·인쇄 공통: 인쇄 규칙은 아래 @media print에서 덮어씀) ---- */
     .stage{
       display:grid; grid-template-columns:minmax(0,1fr) var(--rail-w); gap:1em;
       min-height:var(--stage-h); font-size:var(--fs); margin-bottom:1.6em;
@@ -501,7 +502,7 @@
     .cat-head .title{font-size:15px;}
 
     /* ---- 모바일 ---- */
-    @media (max-width:860px){
+    @media screen and (max-width:860px){
       .stage{grid-template-columns:1fr; min-height:0; font-size:14px;}
       .rail{order:-1;}
       header.top{padding:16px 14px 14px;}
@@ -514,7 +515,6 @@
       .p-cells .numcell .nv{font-size:2em;}
       .rail .stats{grid-template-columns:repeat(3,1fr);}
     }
-  }
 
   /* ---- 움직임: 첫 로드와 시트 갱신 때만(.go 클래스를 잠깐 붙임). 줄이기 설정이면 끔 ---- */
   @media screen and (prefers-reduced-motion: no-preference){
