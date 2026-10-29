@@ -538,7 +538,7 @@
   /* ---- 인쇄(PDF): 첫 장면을 한 장에, 애니메이션 끄고 상세는 펼쳐서 ---- */
   @media print{
     *{animation:none !important; transition:none !important;}
-    .stage{display:grid; grid-template-columns:2fr 1fr; gap:6px; font-size:8px; min-height:0; height:auto; margin-bottom:8px;}
+    .stage{display:block; font-size:8px; min-height:0; height:auto; margin-bottom:8px;}
     .stage .kpi-panel{gap:5px;}
     .pillar{padding:5px 8px 5px 11px; border-radius:5px; gap:3px; break-inside:avoid; border:1px solid var(--border); background:#fff;}
     .pillar::before{width:3px;}
@@ -562,10 +562,46 @@
     .rail .stat .num{font-size:11px;}
     .rail .stat .lbl{font-size:6.5px;}
     .goal span{background:#fff;}
+
+    /* PDF 보정: 오늘 패널은 기둥 아래에 가로로 배치(쪽 아래까지 늘어나거나 글자가 잘리지 않게) */
+    .stage .kpi-panel{display:block;}
+    .pillar{display:block; margin-bottom:5px;}
+    .p-body{margin:3px 0;}
+    .p-chart{display:none;}
+    .p-body{display:block;}
+    .p-svc{break-inside:auto;}
+    .p-svc .cell-detail{break-inside:avoid;}
+    .rail{margin-top:6px; display:grid; grid-template-columns:1fr 1fr; gap:6px; align-items:start; break-inside:avoid;}
+    .rail .stats, .rail .added-panel{grid-column:1 / -1;}
+    .rail .today-item{flex-wrap:wrap;}
+    .rail .today-item .tt{white-space:normal; overflow:visible; flex:1 1 55%;}
+    .rail .today-item .owners{font-size:7.5px; white-space:normal;}
+    .rail .today-item .cat-tag{font-size:7.5px;}
+    .rail .badge{font-size:7.5px;}
+    /* GAP·목록은 기존 인쇄 크기 유지 (새 디자인 화면용 글자 크기가 인쇄로 새지 않게) */
+    .gap-panel .kpi-card{padding:7px 10px; border-radius:6px;}
+    .gap-panel .kpi-head .kpi-label{font-size:8.5px;}
+    .gap-item{font-size:8px; gap:4px;}
+    .cat-head .title{font-size:10.5px;}
+    .category, .month-summary, .stat{border-radius:6px;}
   }
+  /* ---- 항목에 마우스를 올리면 세부내용·담당자 말풍선 / 오늘 완료한 일 ---- */
+  #tip{position:fixed; z-index:50; max-width:min(380px, calc(100vw - 16px)); padding:10px 13px; border-radius:10px; background:var(--panel); color:var(--text); border:1px solid var(--border); box-shadow:0 8px 28px rgba(0,0,0,.28); font-size:13px; line-height:1.5; pointer-events:none;}
+  #tip[hidden]{display:none;}
+  #tip .tip-cat{font-size:11.5px; color:var(--sub); font-weight:600;}
+  #tip .tip-title{font-weight:700; margin-top:2px; word-break:keep-all;}
+  #tip .tip-detail{margin-top:4px; white-space:pre-wrap; word-break:keep-all;}
+  #tip .tip-who{margin-top:6px; padding-top:6px; border-top:1px solid var(--border); font-size:12px; color:var(--sub);}
+  .today-item[data-ti]{cursor:default;}
+  .rail .today-item[data-ti]:hover, .rail .today-item[data-ti]:focus-visible{border-color:rgba(255,255,255,.45); outline:none;}
+  @media screen{ .today-item .owners{display:none;} }
+  @media print{ #tip{display:none !important;} .rail .done-panel{grid-column:1 / -1;} }
+
 </style>
 </head>
 <body>
+
+<div id="tip" role="tooltip" hidden></div>
 
 <div class="wrap" id="appArea">
 
@@ -596,6 +632,7 @@
       <div class="today-panel week-panel" id="weekPanel"></div>
       <div class="stats" id="stats"></div>
       <div class="today-panel added-panel" id="addedTodayPanel"></div>
+      <div class="today-panel done-panel" id="doneTodayPanel"></div>
     </aside>
   </div>
 
@@ -1060,10 +1097,12 @@ function loadData(payload, flash){
   refreshDeptSelect();
   updateSyncLabel(flash);
   if(flash) replayMotion();
+  TIPS.length = 0; hideTip();
   renderTodayPanel();
   renderWeekPanel();
   trackNewRows(ROWS);
   renderAddedTodayPanel();
+  renderDoneTodayPanel();
   applyFilters();
 }
 
@@ -1212,6 +1251,52 @@ function attachHtml(row){
   }).join("");
 }
 
+// 패널 항목 공통 템플릿. 담당자는 화면에서는 숨기고(인쇄에는 표시) 마우스를 올리면 말풍선으로 보여준다.
+const TIPS = [];
+function todayItemHtml(r){
+  return `
+        <div class="today-item" tabindex="0" data-ti="${TIPS.push(r)-1}">
+          <span class="cat-tag">${CAT_ICON[r.cat]||"📌"} ${r.cat}</span>
+          <span class="tt">${r.title}${r.detail?` <span class="d">· ${r.detail}</span>`:''}</span>
+          ${r.statusKey ? badgeHtml(r) : ''}
+          <span class="owners">${(r.owners||[]).join(", ")}</span>
+        </div>
+      `;
+}
+
+let tipFor = null;
+function hideTip(){ tipFor = null; document.getElementById("tip").hidden = true; }
+function showTip(el){
+  const r = TIPS[el.dataset.ti];
+  const tip = document.getElementById("tip");
+  if(!r || (tipFor === el && !tip.hidden)) return;
+  tipFor = el;
+  tip.replaceChildren(...[
+    ["tip-cat", `${CAT_ICON[r.cat]||"📌"} ${r.cat}` + (r.ddText ? ` · ${r.ddText}` : "")],
+    ["tip-title", r.title],
+    ["tip-detail", r.detail],
+    ["tip-who", (r.owners||[]).length ? "담당 " + r.owners.join(", ") : ""]
+  ].filter(([,t])=>t).map(([c,t])=>{ const d = document.createElement("div"); d.className = c; d.textContent = t; return d; }));
+  tip.hidden = false;
+  const b = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+  // 패널이 화면 오른쪽에 있으니 기본은 왼쪽으로 펼치고, 자리가 없으면(모바일) 항목 아래로
+  let x = b.left - w - 10, y = b.top;
+  if(x < 8){
+    x = Math.max(8, Math.min(b.left, innerWidth - w - 8));
+    y = b.bottom + 6;
+    if(y + h > innerHeight - 8) y = b.top - h - 6;
+  }
+  tip.style.left = x + "px";
+  tip.style.top = Math.max(8, Math.min(y, innerHeight - h - 8)) + "px";
+}
+document.addEventListener("mouseover", e=>{
+  const el = e.target.closest && e.target.closest(".today-item[data-ti]");
+  if(el) showTip(el); else hideTip();
+});
+document.addEventListener("focusin", e=>{ const el = e.target.closest && e.target.closest(".today-item[data-ti]"); if(el) showTip(el); });
+document.addEventListener("focusout", hideTip);
+window.addEventListener("scroll", hideTip, true);
+
 function renderTodayPanel(){
   const panel = document.getElementById("todayPanel");
   const items = ROWS.filter(r=>!r.done && (r.statusKey==="overdue" || r.statusKey==="today"))
@@ -1219,14 +1304,7 @@ function renderTodayPanel(){
   const count = items.length;
   const listHtml = count===0
     ? '<div class="today-empty">🎉 오늘 마감이거나 지연된 항목이 없습니다.</div>'
-    : `<div class="today-list">${items.map(r=>`
-        <div class="today-item">
-          <span class="cat-tag">${CAT_ICON[r.cat]||"📌"} ${r.cat}</span>
-          <span class="tt">${r.title}${r.detail?` <span class="d">· ${r.detail}</span>`:''}</span>
-          ${badgeHtml(r)}
-          <span class="owners">${r.owners.join(", ")}</span>
-        </div>
-      `).join("")}</div>`;
+    : `<div class="today-list">${items.map(todayItemHtml).join("")}</div>`;
   panel.innerHTML = `<h2>🔥 오늘 해야 하는 일 <span class="cnt">${count}건</span></h2>${listHtml}`;
 }
 
@@ -1249,14 +1327,7 @@ function renderWeekPanel(){
   const count = items.length;
   const listHtml = count===0
     ? '<div class="today-empty">이번주 남은 마감 일정이 없습니다.</div>'
-    : `<div class="today-list">${items.map(r=>`
-        <div class="today-item">
-          <span class="cat-tag">${CAT_ICON[r.cat]||"📌"} ${r.cat}</span>
-          <span class="tt">${r.title}${r.detail?` <span class="d">· ${r.detail}</span>`:''}</span>
-          ${badgeHtml(r)}
-          <span class="owners">${r.owners.join(", ")}</span>
-        </div>
-      `).join("")}</div>`;
+    : `<div class="today-list">${items.map(todayItemHtml).join("")}</div>`;
   panel.innerHTML = `<h2>🗓 이번주 해야 하는 일 <span class="cnt">${count}건</span></h2>${listHtml}`;
 }
 
@@ -1289,6 +1360,9 @@ if(!lsGet("todoAddedTodaySchemaV3", false)){
 }
 let addedTodayList = lsGet("todoAddedTodayList_" + todayStr(), []);
 let addedTodayKeys = new Set(addedTodayList.map(it=>it.key));
+
+// "오늘 완료한 일": 시트의 O / X 칸에는 완료 날짜가 없어서, 이 브라우저가 지켜보는 동안 미완료 → 완료로 바뀐 행을 같은 방식으로 누적한다.
+let doneTodayKeys = lsGet("todoDoneTodayList_" + todayStr(), []);
 
 let addedTodayDebounceTimer = null;
 let addedTodayLatestRows = null;
@@ -1323,8 +1397,34 @@ function commitAddedTodaySettle(){
     if(addedTodayList.length !== before) changed = true;
     if(changed) lsSet("todoAddedTodayList_" + todayStr(), addedTodayList);
   }
+  // 오늘 완료한 일: 지난 확정 상태에서는 미완료였다가 이번에 완료로 바뀐 행 (같은 날 추가 후 완료도 포함)
+  const doneRaw = lsGet("todoSettledDoneKeys", null);
+  if(doneRaw !== null){
+    const prevDone = new Set(doneRaw), prevAll = new Set(settledKeysRaw || []);
+    const doneNow = new Set(rows.filter(r=>r.done).map(ROW_KEY));
+    const before = doneTodayKeys.join("\n");
+    rows.forEach(r=>{
+      const k = ROW_KEY(r);
+      if(r.done && !prevDone.has(k) && !doneTodayKeys.includes(k) && (prevAll.has(k) || addedTodayKeys.has(k))) doneTodayKeys.push(k);
+    });
+    doneTodayKeys = doneTodayKeys.filter(k => doneNow.has(k));
+    if(doneTodayKeys.join("\n") !== before) lsSet("todoDoneTodayList_" + todayStr(), doneTodayKeys);
+  }
+  lsSet("todoSettledDoneKeys", rows.filter(r=>r.done).map(ROW_KEY));
   lsSet("todoSettledKeys", rows.map(ROW_KEY));
   renderAddedTodayPanel();
+  renderDoneTodayPanel();
+}
+
+function renderDoneTodayPanel(){
+  const panel = document.getElementById("doneTodayPanel");
+  const rowByKey = new Map(ROWS.map(r=>[ROW_KEY(r), r]));
+  const items = doneTodayKeys.map(k => rowByKey.get(k)).filter(r => r && r.done);
+  const count = items.length;
+  const listHtml = count===0
+    ? '<div class="today-empty">오늘 완료 처리된 항목이 아직 없습니다.</div>'
+    : `<div class="today-list">${items.map(todayItemHtml).join("")}</div>`;
+  panel.innerHTML = `<h2>✅ 오늘 완료한 일 <span class="cnt">${count}건</span></h2>${listHtml}`;
 }
 
 function renderAddedTodayPanel(){
@@ -1334,14 +1434,7 @@ function renderAddedTodayPanel(){
   const count = items.length;
   const listHtml = count===0
     ? '<div class="today-empty">오늘 새로 등록된 항목이 아직 없습니다.</div>'
-    : `<div class="today-list">${items.map(r=>`
-        <div class="today-item">
-          <span class="cat-tag">${CAT_ICON[r.cat]||"📌"} ${r.cat}</span>
-          <span class="tt">${r.title}${r.detail?` <span class="d">· ${r.detail}</span>`:''}</span>
-          ${r.statusKey ? badgeHtml(r) : ''}
-          <span class="owners">${(r.owners||[]).join(", ")}</span>
-        </div>
-      `).join("")}</div>`;
+    : `<div class="today-list">${items.map(todayItemHtml).join("")}</div>`;
   panel.innerHTML = `<h2>🆕 오늘 추가한 일 <span class="cnt">${count}건</span></h2>${listHtml}`;
 }
 
