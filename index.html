@@ -585,7 +585,6 @@
       <button id="scheduleBtn">📅 일정표</button>
       <button id="obsidianBtn">🗒️ 옵시디언</button>
       <button id="epmBtn">📈 EPM</button>
-      <button id="soldoutLibBtn" title="품절약 서재 (박중문 PC에서 서재가 켜져 있을 때만 열림)">📚 품절약 서재</button>
       <button id="printBtn">🖨 PDF로 출력</button>
     </div>
   </header>
@@ -1511,7 +1510,6 @@ document.getElementById("logisticsBtn").addEventListener("click", ()=>{ if(LOGIS
 document.getElementById("deliveryDashBtn").addEventListener("click", ()=>window.open("https://scm-vercel-deploy.vercel.app/","_blank"));
 document.getElementById("dwLogisticsBtn").addEventListener("click", ()=>{ if(DW_URL) window.open(DW_URL,"_blank"); });
 document.getElementById("epmBtn").addEventListener("click", ()=>window.open("https://epm2026.vercel.app/dashboard","_blank"));
-document.getElementById("soldoutLibBtn").addEventListener("click", ()=>window.open("http://127.0.0.1:8765/","_blank"));
 document.getElementById("returnBtn").addEventListener("click", ()=>window.open("http://10.1.206.105:8080/%EB%8C%80%EC%8B%9C%EB%B3%B4%EB%93%9C/%EB%A7%A4%EC%B6%9C%ED%9D%90%EB%A6%84%EB%8F%84/index.html","_blank"));
 document.getElementById("scheduleBtn").addEventListener("click", ()=>window.open("schedule.html","_blank"));
 document.getElementById("obsidianBtn").addEventListener("click", ()=>window.open("obsidian://open?vault="+encodeURIComponent("옵시디언")+"&file="+encodeURIComponent("할일 대시보드"),"_blank"));
