@@ -6,6 +6,28 @@
 <title>유통지원 PROJECT (공유)</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/static/pretendard.css" />
 <style>
+  /* =====================================================================
+     새 디자인(미리보기) — 크기 조절 변수
+     화면에 맞게 조정할 때는 아래 숫자만 바꾸세요.
+     --fs        : 첫 장면 글자 기준(1em). 값을 키우면 첫 장면 전체가 커집니다.
+     --stage-h   : 첫 장면 높이(스크롤 없이 한 화면에 보이는 영역)
+     --hdr-h     : 맨 위 파란 헤더 높이(첫 장면 높이 계산용)
+     --wrap-max  : 화면 가로 최대 폭
+     --rail-w    : 오른쪽 어두운 '오늘 할일' 패널 폭
+     --rail-list-h : 오른쪽 패널 안 목록 최대 높이
+     ===================================================================== */
+  :root{
+    --fs: clamp(12px, 0.42vw + 7.2px, 21px);
+    --hdr-h: 118px;
+    --stage-h: clamp(520px, calc(100vh - var(--hdr-h) - 16px), 1500px);
+    --wrap-max: min(96vw, 2300px);
+    --rail-w: 34%;
+    --rail-list-h: 24vh;
+
+    --live:#2bd67b;
+    --c-baekje:#0E8A5F; --c-boksan:#2F63F2; --c-incheon:#D4570C;
+    --dark1:#0b1120; --dark2:#1b2647;
+  }
   :root{
     --bg:#ffffff; --panel:#ffffff; --text:#14161f; --sub:#646b7a; --border:#d3d7e3;
     --blue:#243e8f; --blue-bg:#eaeef9; --orange:#a45414; --orange-bg:#f8ede0;
@@ -317,6 +339,227 @@
     .result-txt{font-size:8px;}
     .status-icon{font-size:10px;}
   }
+
+  /* =====================================================================
+     새 디자인 레이어 (기존 CSS 위에 덮어씀) — 첫 장면: 세 기둥 + 오늘 패널
+     ===================================================================== */
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(43,214,123,.6);}70%{box-shadow:0 0 0 9px rgba(43,214,123,0);}100%{box-shadow:0 0 0 0 rgba(43,214,123,0);}}
+  @keyframes live{0%,100%{box-shadow:0 0 0 0 rgba(43,214,123,.5);}50%{box-shadow:0 0 0 6px rgba(43,214,123,0);}}
+  @keyframes blink{0%,100%{opacity:1; transform:scale(1);}50%{opacity:.35; transform:scale(.75);}}
+  @keyframes rise{from{opacity:0; transform:translateY(.8em);}to{opacity:1; transform:none;}}
+  @keyframes grow{from{transform:scaleY(0);}to{transform:scaleY(1);}}
+  @keyframes fillx{from{transform:scaleX(0);}to{transform:scaleX(1);}}
+
+  .stage .kpi-panel{display:flex; flex-direction:column; gap:.9em; margin:0;}
+
+  @media screen{
+    .wrap{max-width:var(--wrap-max);}
+    header.top{
+      padding:22px max(20px, calc((100vw - var(--wrap-max))/2 + 20px)) 18px; margin-bottom:16px;
+    }
+    .sync-dot{background:var(--live); animation:live 2.4s ease-in-out infinite;}
+    .sync-dot.flash{animation:pulse .9s ease, live 2.4s ease-in-out .9s infinite;}
+    #syncNowBtn{color:#9fe8c1;}
+
+    /* ---- 첫 장면 격자 ---- */
+    .stage{
+      display:grid; grid-template-columns:minmax(0,1fr) var(--rail-w); gap:1em;
+      min-height:var(--stage-h); font-size:var(--fs); margin-bottom:1.6em;
+    }
+
+    /* ---- 기둥 ---- */
+    .pillar{
+      --accent:var(--blue); --accent-l:#8fa8f5;
+      position:relative; flex:1 1 0; min-height:min-content;
+      background:var(--panel); border:1px solid var(--border); border-radius:.9em; box-shadow:var(--shadow);
+      padding:.85em 1.1em .95em 1.35em; display:flex; flex-direction:column; gap:.65em;
+    }
+    .pillar::before{content:""; position:absolute; left:0; top:.9em; bottom:.9em; width:.28em; border-radius:0 .3em .3em 0; background:var(--accent);}
+    .pillar.p-vc{--accent:var(--purple); --accent-l:#c9b4f2;}
+    .pillar.p-svc{--accent:var(--gold); --accent-l:#e6cd8c;}
+    .p-head{display:flex; align-items:center; gap:.6em;}
+    .p-head .kpi-icon{font-size:1em; width:2em; height:2em; border-radius:.6em;}
+    .p-head .kpi-label{font-size:1.3em;}
+    .p-toggle{
+      margin-left:auto; border:1px solid var(--border); background:var(--hover); color:var(--sub);
+      border-radius:2em; padding:.2em .85em; font:inherit; font-size:.8em; font-weight:700; cursor:pointer;
+    }
+    .p-toggle:hover{background:var(--blue-bg); color:var(--text);}
+    .p-toggle::after{content:" ▾";}
+    .p-toggle[aria-expanded="true"]::after{content:" ▴";}
+
+    .p-body{display:grid; grid-template-columns:minmax(13em,.78fr) minmax(0,1.7fr); gap:1.1em; flex:1; min-height:0; align-items:stretch;}
+
+    /* ---- 어두운 핵심 숫자 칸 ---- */
+    .numcell{
+      position:relative; overflow:hidden; text-align:left; width:100%; border:0; font:inherit; color:#fff;
+      background:linear-gradient(135deg, var(--dark1), var(--dark2)); border-radius:.75em;
+      padding:.85em 1.1em; display:flex; flex-direction:column; justify-content:center; gap:.25em;
+    }
+    button.numcell{cursor:pointer;}
+    button.numcell:hover{filter:brightness(1.12);}
+    .numcell:focus-visible, .p-toggle:focus-visible, .bw:focus-visible{outline:.15em solid var(--accent-l); outline-offset:.15em;}
+    .numcell[aria-expanded="true"]{box-shadow:0 0 0 .16em var(--accent-l);}
+    .numcell .nl{font-size:.88em; color:rgba(255,255,255,.7); font-weight:600;}
+    .numcell .nv{font-size:3.2em; font-weight:800; line-height:1.05; letter-spacing:-.03em; font-variant-numeric:tabular-nums; display:flex; align-items:baseline; flex-wrap:wrap; gap:.12em;}
+    .numcell .nv small{font-size:.38em; font-weight:700; color:rgba(255,255,255,.72); letter-spacing:0;}
+    .delta{font-size:.36em; font-weight:800; padding:.15em .6em; border-radius:2em; letter-spacing:0; background:rgba(43,214,123,.18); color:#6df0a8;}
+    .delta.dn{background:rgba(255,120,110,.2); color:#ffaaa3;}
+    .numcell .ns{font-size:.86em; color:rgba(255,255,255,.78); line-height:1.4;}
+    .numcell .ns b{color:#fff;}
+    .nbar{height:.42em; border-radius:1em; background:rgba(255,255,255,.14); overflow:hidden; margin-top:.35em;}
+    .nbar i{display:block; height:100%; width:var(--w); border-radius:1em; background:linear-gradient(90deg, var(--accent-l), #fff); transform-origin:left;}
+    .chip-ok{font-size:.38em; font-weight:800; color:#1b1500; background:#e6cd8c; padding:.15em .7em; border-radius:2em; letter-spacing:0;}
+
+    /* ---- 월별 막대 ---- */
+    .p-chart{display:flex; flex-direction:column; min-width:0; min-height:6.5em; cursor:pointer;}
+    .chart{display:flex; flex-direction:column; flex:1; min-height:0;}
+    .plot{position:relative; flex:1; min-height:5em; border-bottom:1px solid var(--border);}
+    .cols{position:absolute; inset:0; display:grid; grid-template-columns:repeat(12,1fr);}
+    .bw{position:relative; display:flex; align-items:flex-end; justify-content:center; gap:.12em; outline:none;}
+    .bw .bar{display:block; width:62%; height:var(--h); border-radius:.25em .25em 0 0; background:var(--accent); opacity:.5; transform-origin:bottom;}
+    .bw.cur .bar{opacity:1; box-shadow:0 0 .8em color-mix(in srgb, var(--accent) 55%, transparent);}
+    .bw.future::after{content:""; width:62%; height:.3em; border:1px dashed var(--border); border-radius:.15em;}
+    .bw .blink{position:absolute; left:50%; bottom:calc(var(--h) + .35em); margin-left:-.4em; width:.8em; height:.8em; border-radius:50%; background:var(--accent);}
+    .bw:hover .bar{opacity:1;}
+    .bw[data-tip]:hover::before, .bw[data-tip]:focus-visible::before{
+      content:attr(data-tip); position:absolute; bottom:calc(var(--h) + 1.1em); left:50%; transform:translateX(-50%);
+      background:#0b1120; color:#fff; font-size:.78em; font-weight:600; line-height:1.4; padding:.35em .7em; border-radius:.5em; white-space:nowrap; z-index:20; pointer-events:none;
+      box-shadow:0 .3em 1em rgba(0,0,0,.3);
+    }
+    .bw:nth-child(-n+2)[data-tip]:hover::before, .bw:nth-child(-n+2)[data-tip]:focus-visible::before{left:0; transform:none;}
+    .bw:nth-child(n+10)[data-tip]:hover::before, .bw:nth-child(n+10)[data-tip]:focus-visible::before{left:auto; right:0; transform:none;}
+    .goal{position:absolute; left:0; right:0; bottom:var(--b); border-top:.12em dashed var(--red); pointer-events:none;}
+    .goal span{position:absolute; right:0; top:-1.45em; font-size:.74em; font-weight:700; color:var(--red); background:var(--panel); padding:0 .3em;}
+    .gline{position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none;}
+    .gline polyline{fill:none; stroke:var(--orange); stroke-width:2.2; vector-effect:non-scaling-stroke; stroke-linejoin:round; stroke-linecap:round;}
+    .axis{display:grid; grid-template-columns:repeat(12,1fr); text-align:center; font-size:.74em; color:var(--sub); margin-top:.25em;}
+    .axis span.cur{color:var(--text); font-weight:800;}
+    .cnote{font-size:.74em; color:var(--sub); margin-top:.3em; display:flex; flex-wrap:wrap; gap:.3em 1em;}
+    .cnote i{display:inline-block; width:.8em; height:.8em; border-radius:.2em; margin-right:.3em; vertical-align:-.1em;}
+
+    /* ---- 펼친 상세 ---- */
+    .p-detail, .cell-detail{border-top:1px dashed var(--border); padding-top:.8em; margin-top:.1em;}
+    .p-detail{display:none;}
+    .pillar.open .p-detail{display:block; animation:rise .3s ease both;}
+    .cell-detail[hidden]{display:none;}
+    .cell-detail{animation:rise .3s ease both;}
+    .chart.big .plot{min-height:10.5em;}
+    .subrow{display:grid; grid-template-columns:repeat(12,1fr); text-align:center; font-size:.74em; font-weight:700; margin-top:.2em; color:var(--text);}
+    .subrow.lbl{color:var(--sub); font-weight:600;}
+    .pair .bar{width:36%; border-radius:.2em .2em 0 0;}
+    .pair .bar.b{background:var(--orange); opacity:.7;}
+    .stk{display:flex; flex-direction:column-reverse; width:62%; height:var(--h); border-radius:.25em .25em 0 0; overflow:hidden; transform-origin:bottom;}
+    .stk i{display:block; width:100%;}
+    .p-detail .kpi-monthly, .cell-detail .kpi-sla{border-top:0; margin-top:.8em; padding-top:0;}
+    .p-detail .kpi-monthly-base, .cell-detail .kpi-sla-title{font-size:.8em; margin-bottom:.3em;}
+    .p-detail .kpi-monthly-table th, .p-detail .kpi-monthly-table td{font-size:.8em; padding:.2em 0;}
+    .p-detail .kpi-monthly-table th:first-child, .p-detail .kpi-monthly-table td:first-child{width:3.4em;}
+    .cell-detail .kpi-sla-table td{font-size:.86em; padding:.25em .6em;}
+    .cell-detail .kpi-sla-table td:first-child{width:5em;}
+    .cell-detail .kpi-monthly-table th, .cell-detail .kpi-monthly-table td{font-size:.8em; padding:.2em 0;}
+    .cell-detail .kpi-trend .kpi-monthly-table th:first-child, .cell-detail .kpi-trend .kpi-monthly-table td:first-child{width:7.5em;}
+    .cell-detail .kpi-trend-note{font-size:.74em;}
+    .dlink{display:inline-block; font-size:.8em; font-weight:700; color:var(--blue); margin-bottom:.4em;}
+
+    /* ---- 블록형 서비스 세 칸 ---- */
+    .p-cells{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.8em; flex:1; min-height:0;}
+    .p-cells .numcell .nv{font-size:2.3em;}
+    .p-cells .numcell{justify-content:flex-start;}
+
+    /* 2단계 자리(품절약 협조 문): 지금은 표시하지 않음 */
+    .slot-vc-door{display:none;}
+
+    /* ---- 오른쪽 어두운 오늘 패널 ---- */
+    .rail{
+      background:linear-gradient(160deg, var(--dark1), var(--dark2)); color:#eef0f6; border-radius:.9em;
+      padding:1em; display:flex; flex-direction:column; gap:.9em; box-shadow:var(--shadow); min-width:0;
+    }
+    .rail .today-panel{background:none; border:0; box-shadow:none; padding:0; margin:0;}
+    .rail .today-panel h2{font-size:1.2em; color:#fff; margin-bottom:.5em;}
+    .rail .today-panel h2 .cnt{background:rgba(255,255,255,.16); color:#fff; font-size:.75em;}
+    .rail .today-list{max-height:var(--rail-list-h); overflow:auto; gap:.4em;}
+    .rail .today-item{background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.13); color:#eef0f6; font-size:.84em; padding:.5em .75em;}
+    .rail .today-item .d, .rail .today-item .cat-tag, .rail .today-item .owners{color:rgba(255,255,255,.64);}
+    .rail .today-empty{background:rgba(255,255,255,.07); color:rgba(255,255,255,.78); font-size:.84em;}
+    .rail .stats{grid-template-columns:repeat(5,1fr); gap:.4em; margin:0;}
+    .rail .stat{background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.13); box-shadow:none; padding:.55em .3em; text-align:center; border-radius:.6em;}
+    .rail .stat .num{font-size:1.55em; color:#fff !important;}
+    .rail .stat .lbl{font-size:.72em; color:rgba(255,255,255,.66);}
+    .rail .stat.warn .num{color:#ffb4ae !important;}
+
+    /* ---- 두 번째 장면 이후: 같은 스타일로 정리 ---- */
+    .section-title::before{background:var(--blue);}
+    .gap-panel{gap:1em;}
+    .gap-panel .kpi-card, .category, .month-summary, .controls, .stat{border-radius:.9em;}
+    .gap-panel .kpi-card{padding:1.1em 1.3em;}
+    .gap-panel .kpi-head .kpi-label{font-size:1.05em;}
+    .gap-item{font-size:13px;}
+    .cat-head .title{font-size:15px;}
+
+    /* ---- 모바일 ---- */
+    @media (max-width:860px){
+      .stage{grid-template-columns:1fr; min-height:0; font-size:14px;}
+      .rail{order:-1;}
+      header.top{padding:16px 14px 14px;}
+      .sync-box{flex-wrap:wrap; border-radius:1em; max-width:100%; row-gap:.4em;}
+      .sync-box button{white-space:nowrap;}
+      .rail .today-list{max-height:30vh;}
+      .p-body{grid-template-columns:1fr;}
+      .p-cells{grid-template-columns:1fr;}
+      .numcell .nv{font-size:2.6em;}
+      .p-cells .numcell .nv{font-size:2em;}
+      .rail .stats{grid-template-columns:repeat(3,1fr);}
+    }
+  }
+
+  /* ---- 움직임: 첫 로드와 시트 갱신 때만(.go 클래스를 잠깐 붙임). 줄이기 설정이면 끔 ---- */
+  @media screen and (prefers-reduced-motion: no-preference){
+    .go .pillar{animation:rise .6s cubic-bezier(.2,.7,.2,1) both;}
+    .go .pillar:nth-child(2){animation-delay:.09s;}
+    .go .pillar:nth-child(3){animation-delay:.18s;}
+    .go .rail{animation:rise .6s .1s cubic-bezier(.2,.7,.2,1) both;}
+    .go .bar, .go .stk{animation:grow .9s cubic-bezier(.2,.7,.2,1) both; animation-delay:calc(var(--i, 0) * 45ms + .2s);}
+    .go .nbar i{animation:fillx 1.1s .3s ease both;}
+    .bw .blink{animation:ring 2.4s ease-out infinite;}
+    .bw.cur .bar{animation:glow 3s ease-in-out infinite;}
+    .go .bw.cur .bar{animation:grow .9s cubic-bezier(.2,.7,.2,1) both, glow 3s ease-in-out 1.4s infinite; animation-delay:calc(var(--i, 0) * 45ms + .2s), 1.4s;}
+  }
+  @keyframes ring{0%{box-shadow:0 0 0 0 color-mix(in srgb, var(--accent) 70%, transparent);}70%,100%{box-shadow:0 0 0 .9em transparent;}}
+  @keyframes glow{0%,100%{box-shadow:0 0 .6em color-mix(in srgb, var(--accent) 40%, transparent); filter:brightness(1);}50%{box-shadow:0 0 1.6em .15em color-mix(in srgb, var(--accent) 75%, transparent); filter:brightness(1.18);}}
+  @media (prefers-reduced-motion: reduce){
+    .sync-dot, .sync-dot.flash, .bw .blink{animation:none !important;}
+    .p-detail, .cell-detail{animation:none !important;}
+  }
+
+  /* ---- 인쇄(PDF): 첫 장면을 한 장에, 애니메이션 끄고 상세는 펼쳐서 ---- */
+  @media print{
+    *{animation:none !important; transition:none !important;}
+    .stage{display:grid; grid-template-columns:2fr 1fr; gap:6px; font-size:8px; min-height:0; height:auto; margin-bottom:8px;}
+    .stage .kpi-panel{gap:5px;}
+    .pillar{padding:5px 8px 5px 11px; border-radius:5px; gap:3px; break-inside:avoid; border:1px solid var(--border); background:#fff;}
+    .pillar::before{width:3px;}
+    .p-toggle{display:none;}
+    .p-head .kpi-label{font-size:10px;}
+    .p-body{display:grid; grid-template-columns:1fr 1.6fr; gap:6px;}
+    .numcell{padding:5px 8px; border-radius:5px;}
+    .numcell .nv{font-size:20px;}
+    .p-cells{display:grid; grid-template-columns:repeat(3,1fr); gap:5px;}
+    .p-cells .numcell .nv{font-size:14px;}
+    .plot{min-height:36px;}
+    .bw .bar{opacity:.85;}
+    .bw .blink{display:none;}
+    .p-detail{display:block !important; padding-top:3px;}
+    .cell-detail, .cell-detail[hidden]{display:block !important; padding-top:3px;}
+    .chart.big .plot{min-height:36px;}
+    .rail{padding:6px 8px; border-radius:5px; gap:5px; background:#1b2647 !important;}
+    .rail .today-panel h2{font-size:10px; margin-bottom:3px;}
+    .rail .today-list{max-height:none; overflow:visible;}
+    .rail .today-item{font-size:8px; padding:2px 5px;}
+    .rail .stat .num{font-size:11px;}
+    .rail .stat .lbl{font-size:6.5px;}
+    .goal span{background:#fff;}
+  }
 </style>
 </head>
 <body>
@@ -343,19 +586,18 @@
     </div>
   </header>
 
-  <div class="section-title">📊 KPI</div>
-  <div class="kpi-panel" id="kpiPanel"></div>
+  <div class="stage" id="stage">
+    <div class="kpi-panel" id="kpiPanel"></div>
+    <aside class="rail" aria-label="오늘 할 일">
+      <div class="today-panel" id="todayPanel"></div>
+      <div class="today-panel week-panel" id="weekPanel"></div>
+      <div class="stats" id="stats"></div>
+      <div class="today-panel added-panel" id="addedTodayPanel"></div>
+    </aside>
+  </div>
 
   <div class="section-title">🎯 GAP을 메우기 위한 할일</div>
   <div class="gap-panel" id="gapPanel"></div>
-
-  <div class="today-panel" id="todayPanel"></div>
-
-  <div class="today-panel week-panel" id="weekPanel"></div>
-
-  <div class="today-panel added-panel" id="addedTodayPanel"></div>
-
-  <div class="stats" id="stats"></div>
 
   <div class="controls">
     <input type="text" id="search" placeholder="내용, 담당자, 결과, 기한(예: 7월16일, 0716) 검색...">
@@ -529,26 +771,185 @@ function renderKpiSla(k){
     </div>`;
 }
 
+// ===== 새 디자인: 세 기둥 렌더링 (KPI_DATA의 값만 사용 — 데이터·id·이벤트는 그대로) =====
+function nf(v){ return v==null ? "-" : (Number.isInteger(v) ? String(v) : v.toFixed(1)); }
+function numFrom(s){ const m=(s||"").match(/(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : null; }
+function lastIdx(monthly, f){ let i=-1; monthly.forEach((x,j)=>{ if(x[f]!=null) i=j; }); return i; }
+function stripParen(s){ return (s||"").replace(/^\(|\)$/g,""); }
+
+function kpiLabelHtml(k){
+  if(k.linkKey) return `<a class="kpi-label kpi-label-link" data-linkkey="${k.linkKey}" target="_blank" rel="noopener" title="${k.linkTitle||''}">${k.label}</a>`;
+  if(k.link) return `<a class="kpi-label kpi-label-link" href="${k.link}"${k.linkBlank?' target="_blank" rel="noopener"':''} title="${k.linkTitle||(k.label+' 바로가기')}">${k.label}</a>`;
+  return `<span class="kpi-label">${k.label}</span>`;
+}
+
+// 월 막대 차트. kind: direct | vc, big: 펼친 상세용
+function monthChart(k, kind, big){
+  const m = k.monthly;
+  const f = kind==="direct" ? "pharma" : "val";
+  const li = lastIdx(m, f);
+  const goal = kind==="direct" ? numFrom(k.target) : null;
+  const maxV = Math.max(...m.map(x=>x[f]).filter(v=>v!=null));
+  const scale = kind==="direct" ? Math.max(goal, maxV)*1.2 : maxV*1.25;
+  const cols = m.map((x,i)=>{
+    const v = x[f];
+    const st = v==null ? "future" : (i===li ? "cur" : "past");
+    const h = v==null ? 0 : (v/scale*100).toFixed(1);
+    let tip = `${x.m}월 · 아직 없음`, inner = "";
+    if(v!=null){
+      if(kind==="direct"){
+        tip = `${x.m}월 · 제약 ${x.pharma}% · 그룹사 ${x.group}% · 직거래 ${x.revenue}억`;
+        if(big){
+          const hg = (x.group/scale*100).toFixed(1);
+          inner = `<i class="bar" style="--i:${i}"></i><i class="bar b" style="--i:${i};height:${hg}%"></i>`;
+        } else inner = `<i class="bar" style="--i:${i}"></i>`;
+      } else {
+        const has3 = x.baekje!=null;
+        tip = `${x.m}월 · ${nf(x.val)}억` + (has3 ? ` (백제 ${x.baekje} · 복산 ${x.boksan} · 인천 ${x.incheon})` : "");
+        if(big){
+          inner = has3
+            ? `<div class="stk" style="--i:${i}"><i style="flex:${x.baekje};background:var(--c-baekje)"></i><i style="flex:${x.boksan};background:var(--c-boksan)"></i><i style="flex:${x.incheon};background:var(--c-incheon)"></i></div>`
+            : `<div class="stk" style="--i:${i}"><i style="flex:1;background:#9aa1b3"></i></div>`;
+        } else inner = `<i class="bar" style="--i:${i}"></i>`;
+      }
+    }
+    return `<div class="bw ${st}${big&&kind==="direct"?' pair':''}" style="--h:${h}%" data-tip="${tip}" tabindex="0">${inner}${i===li&&!big?'<b class="blink"></b>':''}</div>`;
+  }).join("");
+  let overlay = "";
+  if(kind==="direct"){
+    overlay += `<div class="goal" style="--b:${(goal/scale*100).toFixed(1)}%"><span>목표 ${goal}%</span></div>`;
+    if(!big){
+      const pts = m.map((x,i)=> x.group==null ? null : `${i+0.5},${(100-x.group/scale*100).toFixed(1)}`).filter(Boolean).join(" ");
+      overlay += `<svg class="gline" viewBox="0 0 12 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}"/></svg>`;
+    }
+  }
+  const axis = m.map((x,i)=>`<span class="${i===li?'cur':''}">${x.m}월</span>`).join("");
+  let note = "";
+  if(kind==="direct") note = big
+    ? `<span><i style="background:var(--blue)"></i>제약 직거래율</span><span><i style="background:var(--orange)"></i>그룹사</span><span>점선: 목표 ${goal}%</span>`
+    : `<span><i style="background:var(--blue)"></i>제약 직거래율(막대)</span><span><i style="background:var(--orange)"></i>그룹사(선)</span>`;
+  else note = big
+    ? `<span><i style="background:var(--c-baekje)"></i>백제</span><span><i style="background:var(--c-boksan)"></i>복산</span><span><i style="background:var(--c-incheon)"></i>인천</span><span><i style="background:#9aa1b3"></i>1~3월은 합계만</span>`
+    : `<span>월 매출(억) · 25년 월 10억 → ${k.target}</span>`;
+  let sub = "";
+  if(big && kind==="direct"){
+    sub = `<div class="subrow lbl">직거래 금액(억)</div><div class="subrow">${m.map(x=>`<span>${x.revenue==null?'-':x.revenue}</span>`).join("")}</div>`;
+  }
+  return `<div class="chart${big?' big':''}"><div class="plot"><div class="cols">${cols}</div>${overlay}</div><div class="axis">${axis}</div>${sub}<div class="cnote">${note}</div></div>`;
+}
+
+// 칸 보조 힌트 — SLA 행 데이터에서 계산(없으면 기존 sub 문구)
+function svcHint(k){
+  const sla = k.sla || [];
+  try{
+    if(/거점도매/.test(k.label)){
+      const mins = sla.map(s=>parseFloat(s.label)).filter(n=>!isNaN(n));
+      return `${sla[0].label} ${sla[0].text} · 최저 ${Math.min(...mins)}점`;
+    }
+    if(/종합도매/.test(k.label)){
+      const d = sla.find(s=>s.label==="D");
+      if(d){ const sc = (d.text.match(/\d+\.\d/g)||[]).map(parseFloat); return `D ${d.text.split(" · ").length}개사 · 최저 ${Math.min(...sc).toFixed(1)}`; }
+    }
+    if(/VC도매/.test(k.label)){
+      let low = null;
+      sla.forEach(s=>{
+        const all = [...s.text.matchAll(/(\d+)점\s*([SABCD])/g)];
+        if(all.length){ const l = all[all.length-1]; const sc = parseInt(l[1],10); if(!low || sc<low.sc) low = {name:s.label.replace(/약품|나이스/,''), sc, g:l[2]}; }
+      });
+      if(low) return `최저 ${low.name} ${low.sc}점 ${low.g}`;
+    }
+  }catch(e){}
+  return k.sub || "";
+}
+
+function numCellDirectVc(k, kind){
+  const m = k.monthly;
+  const f = kind==="direct" ? "pharma" : "val";
+  const li = lastIdx(m, f);
+  const cur = m[li], prev = li>0 ? m[li-1] : null;
+  const d = prev && prev[f]!=null ? cur[f]-prev[f] : null;
+  const unit = kind==="direct" ? "%" : "억";
+  const dTxt = d==null ? "" : `<span class="delta${d<0?' dn':''}">${d<0?'▼':'▲'} ${nf(Math.abs(Math.round(d*10)/10))}${kind==="direct"?'%p':'억'}</span>`;
+  const label = kind==="direct" ? `${cur.m}월 제약 직거래율` : `${cur.m}월 VC 매출`;
+  const ns = kind==="direct"
+    ? `그룹사 <b>${cur.group}%</b> · ${k.target}<br>${stripParen(k.valueNote)}`
+    : `${k.target}<br>${stripParen(k.valueNote)}`;
+  return `<button type="button" class="numcell" data-toggle="pillar" aria-expanded="false" title="눌러서 상세 보기">
+      <span class="nl">${label}</span>
+      <span class="nv">${nf(cur[f])}<small>${unit}</small>${dTxt}</span>
+      <span class="ns">${ns}</span>
+      <span class="nbar"><i style="--w:${Math.min(100,Math.max(0,k.pct))}%"></i></span>
+    </button>`;
+}
+
+function pillarHtml(k, kind){
+  const detailBig = monthChart(k, kind, true) + renderKpiMonthly(k);
+  return `
+  <section class="pillar p-${kind}" data-pillar="${kind}">
+    <div class="p-head"><span class="kpi-icon">${k.icon}</span>${kpiLabelHtml(k)}
+      <button type="button" class="p-toggle" data-toggle="pillar" aria-expanded="false">상세</button></div>
+    <div class="p-body">
+      ${numCellDirectVc(k, kind)}
+      <div class="p-chart" data-toggle="pillar">${monthChart(k, kind, false)}</div>
+    </div>
+    ${kind==="vc" ? '<div class="slot-vc-door" aria-hidden="true"><!-- 2단계: 품절약 협조 ▸ 자리 (지금은 표시 안 함) --></div>' : ''}
+    <div class="p-detail">${detailBig}</div>
+  </section>`;
+}
+
+function svcPillarHtml(list){
+  const cells = list.map((k,i)=>{
+    const big = k.value.replace(/\s*\(.*\)\s*$/,"");
+    const small = (k.value.match(/\((.*)\)\s*$/)||[])[1];
+    return `<button type="button" class="numcell" data-toggle="cell" data-cell="${i}" aria-expanded="false" title="눌러서 상세 보기">
+      <span class="nl">${k.label.replace(/^블록형\s*·\s*/,"")}</span>
+      <span class="nv">${big}${k.achieved?'<span class="chip-ok">달성</span>':''}</span>
+      <span class="ns">${small?`<b>(${small})</b> · `:''}${svcHint(k)}</span>
+      <span class="nbar"><i style="--w:${Math.min(100,Math.max(0,k.pct))}%"></i></span>
+    </button>`;
+  }).join("");
+  const details = list.map((k,i)=>`
+    <div class="cell-detail" data-cell="${i}" hidden>
+      ${k.link ? `<a class="dlink" href="${k.link}"${k.linkBlank?' target="_blank" rel="noopener"':''} title="${k.linkTitle||''}">${k.label} 열기 ↗</a>` : `<div class="kpi-label" style="font-size:1em">${k.label}</div>`}
+      ${renderKpiSla(k)}
+    </div>`).join("");
+  return `
+  <section class="pillar p-svc" data-pillar="svc">
+    <div class="p-head"><span class="kpi-icon">⭐</span><span class="kpi-label">블록형 거점 도매 서비스</span></div>
+    <div class="p-cells">${cells}</div>
+    ${details}
+  </section>`;
+}
+
 function renderKpiPanel(){
   const el = document.getElementById("kpiPanel");
-  el.innerHTML = KPI_DATA.map(k=>{
-    const labelHtml = k.linkKey
-      ? `<a class="kpi-label kpi-label-link" data-linkkey="${k.linkKey}" target="_blank" rel="noopener" title="${k.linkTitle||''}">${k.label}</a>`
-      : k.link
-      ? `<a class="kpi-label kpi-label-link" href="${k.link}"${k.linkBlank?' target="_blank" rel="noopener"':''} title="${k.linkTitle||(k.label+' 바로가기')}">${k.label}</a>`
-      : `<span class="kpi-label">${k.label}</span>`;
-    return `
-    <div class="kpi-card ${k.cls}">
-      <span class="kpi-watermark">${k.icon}</span>
-      <div class="kpi-head"><span class="kpi-icon">${k.icon}</span>${labelHtml}</div>
-      <div class="kpi-value">${k.value}${k.achieved?'<span class="kpi-achieved">달성</span>':''}${k.valueNote?`<span class="kpi-value-note">${k.valueNote}</span>`:''}</div>
-      <span class="kpi-target">${k.target}</span>
-      <div class="kpi-bar"><div class="fill" style="width:${Math.min(100,Math.max(0,k.pct))}%"></div></div>
-      ${k.monthly?renderKpiMonthly(k):`<div class="kpi-sub">${k.sub}</div>`}
-      ${k.sla?renderKpiSla(k):''}
-    </div>
-  `;
-  }).join("");
+  el.innerHTML = pillarHtml(KPI_DATA[0], "direct") + pillarHtml(KPI_DATA[1], "vc") + svcPillarHtml(KPI_DATA.slice(2));
+}
+
+// 기둥/칸 눌러서 같은 자리에서 펼침·접힘
+document.getElementById("kpiPanel").addEventListener("click", e=>{
+  const t = e.target.closest("[data-toggle]");
+  if(!t || e.target.closest("a")) return;
+  const p = t.closest(".pillar");
+  if(t.dataset.toggle==="pillar"){
+    const open = !p.classList.contains("open");
+    p.classList.toggle("open", open);
+    p.querySelectorAll('[data-toggle="pillar"][aria-expanded]').forEach(b=>b.setAttribute("aria-expanded", open));
+  } else {
+    const was = t.getAttribute("aria-expanded")==="true";
+    p.querySelectorAll('[data-toggle="cell"]').forEach(b=>b.setAttribute("aria-expanded","false"));
+    p.querySelectorAll(".cell-detail").forEach(d=>d.hidden = true);
+    if(!was){
+      t.setAttribute("aria-expanded","true");
+      p.querySelector(`.cell-detail[data-cell="${t.dataset.cell}"]`).hidden = false;
+    }
+  }
+});
+
+// 움직임: 첫 로드와 시트 갱신 때만 잠깐 재생
+function replayMotion(){
+  const a = document.getElementById("appArea");
+  a.classList.remove("go"); void a.offsetWidth; a.classList.add("go");
 }
 
 // 출처: 유통지원팀 26년 상반기 성과 및 하반기 전략(최종).xlsx · ■ 하반기 전략 (GAP을 메우기 위해 할일)
@@ -655,6 +1056,7 @@ function loadData(payload, flash){
   dwBtn.style.opacity = DW_URL ? "" : ".5";
   refreshDeptSelect();
   updateSyncLabel(flash);
+  if(flash) replayMotion();
   renderTodayPanel();
   renderWeekPanel();
   trackNewRows(ROWS);
