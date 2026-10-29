@@ -597,6 +597,19 @@
   @media screen{ .today-item .owners{display:none;} }
   @media print{ #tip{display:none !important;} .rail .done-panel{grid-column:1 / -1;} }
 
+  /* ---- VC 처수: 숫자 칸 두 개 + 차트 탭 ---- */
+  .nstack{display:flex; flex-direction:column; gap:.6em; min-width:0;}
+  .nstack .numcell{flex:1;}
+  .nstack .numcell .nv{font-size:2.3em;}
+  .numcell .nl em{font-style:normal; font-weight:500; opacity:.8;}
+  .ctabs{display:flex; gap:.3em; justify-content:flex-end; margin-bottom:.25em;}
+  .ctabs button{border:1px solid var(--border); background:var(--hover); color:var(--sub); border-radius:2em; padding:.05em .8em; font:inherit; font-size:.76em; font-weight:700; cursor:pointer;}
+  .ctabs button[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .cwrap{display:flex; flex-direction:column; flex:1; min-height:0;}
+  .p-vc[data-ctab="rev"] .c-out, .p-vc[data-ctab="out"] .c-rev{display:none;}
+  .dsub{font-size:.8em; font-weight:700; color:var(--sub); margin:1em 0 .3em; padding-top:.8em; border-top:1px dashed var(--border);}
+  @media print{ .ctabs{display:none;} }
+
 </style>
 </head>
 <body>
@@ -724,7 +737,15 @@ const KPI_DATA = [
       {m:4, val:29, baekje:14.5, boksan:7.3, incheon:8.1}, {m:5, val:27, baekje:13.6, boksan:6.8, incheon:7.3},
       {m:6, val:31, baekje:14.3, boksan:8, incheon:8.7}, {m:7, val:32, baekje:14.6, boksan:7.9, incheon:9.4}, {m:8, val:31.2, baekje:14.2, boksan:7.6, incheon:9.4}, {m:9, val:32.1, baekje:14.9, boksan:7.4, incheon:9.8},
       {m:10, val:null, baekje:null, boksan:null, incheon:null}, {m:11, val:null, baekje:null, boksan:null, incheon:null}, {m:12, val:null, baekje:null, boksan:null, incheon:null}
-    ] },
+    ],
+    // 처수 — 출처: (약국몰)유통지원공유용_더샵플러스 월별 가동률_261029_ver.1.xlsx (가입처수·가동처수, 10월은 28일 마감 기준)
+    //        목표 가동처수 2,621처: (26.09)더샵플러스 현황지표.xlsx 사업지표 (누적 로컬문전 약국 3,854처 × 80% × 85%)
+    outlets:{ goal:2621, asof:"28일 마감 기준",
+      monthly:[
+        {m:1, join:1172, act:770}, {m:2, join:1258, act:806}, {m:3, join:1354, act:889}, {m:4, join:1451, act:997}, {m:5, join:1486, act:1035},
+        {m:6, join:1505, act:1097}, {m:7, join:1523, act:1094}, {m:8, join:1533, act:1095}, {m:9, join:1534, act:1096}, {m:10, join:1825, act:1238},
+        {m:11, join:null, act:null}, {m:12, join:null, act:null}
+      ] } },
   // 블록형 거점 도매 서비스: 거점 / 종합 / VC 3분할 (출처: SLA평가/SLA 평가 종합_완료_9월_2차.xlsx · 종합 관리장 시트)
   { cls:"kpi-svc", icon:"⭐", label:"블록형 · 거점도매", value:"S 11/11 권역", target:"목표 11개 권역 S (5/5 업체 전원 S)",
     link:"slaeval://open", linkBlank:true, linkTitle:"블록형 거점도매 평가시스템 열기 (Chrome으로 열림, 도매사 미오픈·관리자만 사용중)",
@@ -779,7 +800,7 @@ function renderKpiMonthly(k){
   const rows = k.monthlyRows.map(r=>row(r.label,r.field,r.unit!==undefined?r.unit:k.monthlyUnit)).join("");
   return `
     <div class="kpi-monthly">
-      <div class="kpi-monthly-base"><span>${k.monthlyBase}</span><span class="kpi-monthly-unit">(단위: 억 원)</span></div>
+      <div class="kpi-monthly-base"><span>${k.monthlyBase}</span><span class="kpi-monthly-unit">(${k.unitLabel||"단위: 억 원"})</span></div>
       <table class="kpi-monthly-table">
         <thead><tr><th>26년</th>${heads}</tr></thead>
         <tbody>${rows}</tbody>
@@ -922,16 +943,60 @@ function numCellDirectVc(k, kind){
     </button>`;
 }
 
+// ===== VC 처수(가입처·가동처): 매출 옆에 같은 방식으로 =====
+let vcTab = "rev";
+const nfc = v => v==null ? "-" : v.toLocaleString("ko-KR");
+
+function outletChart(k, big){
+  const o = k.outlets, m = o.monthly, li = lastIdx(m, "act");
+  const scale = Math.max(o.goal, ...m.map(x=>x.join||0)) * 1.15;
+  const cols = m.map((x,i)=>{
+    const v = x.act, st = v==null ? "future" : (i===li ? "cur" : "past");
+    const tip = v==null ? `${x.m}월 · 아직 없음` : `${x.m}월 · 가동처 ${nfc(v)} · 가입처 ${nfc(x.join)}`;
+    return `<div class="bw ${st}" style="--h:${v==null ? 0 : (v/scale*100).toFixed(1)}%" data-tip="${tip}" tabindex="0">${v==null ? "" : `<i class="bar" style="--i:${i}"></i>`}${i===li&&!big ? '<b class="blink"></b>' : ""}</div>`;
+  }).join("");
+  const pts = m.map((x,i)=> x.join==null ? null : `${i+0.5},${(100-x.join/scale*100).toFixed(1)}`).filter(Boolean).join(" ");
+  const overlay = `<div class="goal" style="--b:${(o.goal/scale*100).toFixed(1)}%"><span>목표 ${nfc(o.goal)}처</span></div>`
+    + `<svg class="gline" viewBox="0 0 12 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}"/></svg>`;
+  const axis = m.map((x,i)=>`<span class="${i===li?'cur':''}">${x.m}월</span>`).join("");
+  const note = `<span><i style="background:var(--accent)"></i>가동처수(막대)</span><span><i style="background:var(--orange)"></i>가입처수(선)</span>` + (big ? `<span>점선: 목표 ${nfc(o.goal)}처 · ${m[li].m}월은 ${o.asof}</span>` : "");
+  return `<div class="chart${big?' big':''}"><div class="plot"><div class="cols">${cols}</div>${overlay}</div><div class="axis">${axis}</div><div class="cnote">${note}</div></div>`;
+}
+
+function numCellOutlets(k){
+  const o = k.outlets, m = o.monthly, li = lastIdx(m, "act"), cur = m[li], prev = m[li-1];
+  const d = prev ? cur.act - prev.act : null;
+  const dTxt = d==null ? "" : `<span class="delta${d<0?' dn':''}">${d<0?'▼':'▲'} ${nfc(Math.abs(d))}처</span>`;
+  const pct = Math.round(cur.act / o.goal * 100);
+  return `<button type="button" class="numcell nc-out" data-toggle="pillar" aria-expanded="false" title="눌러서 상세 보기">
+      <span class="nl">${cur.m}월 가동처수 <em>(${o.asof})</em></span>
+      <span class="nv">${nfc(cur.act)}<small>처</small>${dTxt}</span>
+      <span class="ns">목표 <b>${nfc(o.goal)}처</b> 중 <b>${pct}%</b> · 가입처 <b>${nfc(cur.join)}</b></span>
+      <span class="nbar"><i style="--w:${Math.min(100,pct)}%"></i></span>
+    </button>`;
+}
+
+function outletDetail(k){
+  const o = k.outlets;
+  const table = renderKpiMonthly({ monthly:o.monthly, monthlyRows:[{label:"가동처",field:"act",unit:""},{label:"가입처",field:"join",unit:""}],
+    monthlyUnit:"", monthlyBase:`목표 가동처수 ${nfc(o.goal)}처 (로컬문전 약국 3,854처 × 80% × 85%)`, unitLabel:"단위: 처" });
+  return `<div class="dsub">처수 (가입처·가동처)</div>${outletChart(k, true)}${table}`;
+}
+
 function pillarHtml(k, kind){
-  const detailBig = monthChart(k, kind, true) + renderKpiMonthly(k);
+  const vcn = kind==="vc" && k.outlets;
+  const detailBig = monthChart(k, kind, true) + renderKpiMonthly(k) + (vcn ? outletDetail(k) : "");
   return `
-  <section class="pillar p-${kind}" data-pillar="${kind}">
+  <section class="pillar p-${kind}" data-pillar="${kind}"${vcn ? ` data-ctab="${vcTab}"` : ""}>
     <div class="p-head"><span class="kpi-icon">${k.icon}</span>${kpiLabelHtml(k)}
       ${kind==="vc" ? '<a class="slot-vc-door" href="http://127.0.0.1:8765/" target="_blank" rel="noopener" title="품절약 서재 (박중문 PC에서 서재가 켜져 있을 때만 열림)">📚 품절약 협조 ▸</a>' : ''}
       <button type="button" class="p-toggle" data-toggle="pillar" aria-expanded="false">상세</button></div>
     <div class="p-body">
-      ${numCellDirectVc(k, kind)}
-      <div class="p-chart" data-toggle="pillar">${monthChart(k, kind, false)}</div>
+      ${vcn ? `<div class="nstack">${numCellDirectVc(k, kind)}${numCellOutlets(k)}</div>` : numCellDirectVc(k, kind)}
+      <div class="p-chart" data-toggle="pillar">${vcn
+        ? `<div class="ctabs"><button type="button" data-ctab="rev" aria-pressed="${vcTab==="rev"}">매출</button><button type="button" data-ctab="out" aria-pressed="${vcTab==="out"}">처수</button></div>`
+          + `<div class="cwrap c-rev">${monthChart(k, kind, false)}</div><div class="cwrap c-out">${outletChart(k, false)}</div>`
+        : monthChart(k, kind, false)}</div>
     </div>
     <div class="p-detail">${detailBig}</div>
   </section>`;
@@ -968,6 +1033,13 @@ function renderKpiPanel(){
 
 // 기둥/칸 눌러서 같은 자리에서 펼침·접힘
 document.getElementById("kpiPanel").addEventListener("click", e=>{
+  const tb = e.target.closest("button[data-ctab]");
+  if(tb){
+    vcTab = tb.dataset.ctab;
+    const p = tb.closest(".pillar"); p.dataset.ctab = vcTab;
+    p.querySelectorAll("button[data-ctab]").forEach(b=>b.setAttribute("aria-pressed", b===tb));
+    return;
+  }
   const t = e.target.closest("[data-toggle]");
   if(!t || e.target.closest("a")) return;
   const p = t.closest(".pillar");
