@@ -4,106 +4,149 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>유통지원팀 일정표</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/static/pretendard.css" />
 <style>
+  /* 1번 대시보드(유통지원_할일_대시보드)와 같은 디자인 토큰 */
   :root{
-    --bg:#f5f7fb; --panel:#ffffff; --text:#1a1d29; --sub:#5b6272; --border:#e5e8f0;
-    --blue:#2563eb; --blue-bg:#eaf1ff; --orange:#dc2626; --orange-bg:#fde8e8;
-    --holiday:#b45309; --holiday-bg:#fef3c7;
+    --bg:#ffffff; --panel:#ffffff; --text:#14161f; --sub:#646b7a; --border:#d3d7e3;
+    --blue:#243e8f; --blue-bg:#eaeef9; --orange:#a45414; --orange-bg:#f8ede0;
+    --amber:#96690a; --amber-bg:#f7eede;
+    --hover:#eef0f6; --shadow: 0 1px 2px rgba(15,23,42,.09), 0 8px 22px rgba(15,23,42,.12);
+    --navy-from:#0b1120; --navy-to:#1b2647; --gold:#c9a24b; --gold-bg:#f8f0dc;
+    --today-bg:#1b2647; --today-fg:#ffffff;
   }
   @media (prefers-color-scheme: dark){
     :root{
-      --bg:#12141c; --panel:#1a1d29; --text:#eef0f6; --sub:#9aa1b3; --border:#2b2f3d;
-      --blue:#5b93ff; --blue-bg:#1c2942; --orange:#f87171; --orange-bg:#3a1414;
-      --holiday:#fbbf24; --holiday-bg:#3a2c06;
+      --bg:#0d0f16; --panel:#161a26; --text:#eef0f6; --sub:#9aa1b3; --border:#262b3b;
+      --blue:#7d9cf2; --blue-bg:#1b2742; --orange:#e2a568; --orange-bg:#332212;
+      --amber:#e3bd6b; --amber-bg:#332811;
+      --hover:#1e2333; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35);
+      --navy-from:#05070d; --navy-to:#141c33; --gold:#d9bb72; --gold-bg:#332811;
+      --today-bg:#d9bb72; --today-fg:#1b1400;
     }
   }
   *{box-sizing:border-box;}
   body{
-    margin:0; background:var(--bg); color:var(--text); min-height:100vh;
+    margin:0; background:var(--bg); color:var(--text); min-height:100vh; line-height:1.5;
     font-family:"Pretendard","Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,sans-serif;
-    padding:20px;
   }
-  .wrap{max-width:1100px; margin:0 auto;}
-  header{display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px; margin-bottom:16px;}
-  h1{font-size:22px; margin:0 0 4px;}
-  .sub{color:var(--sub); font-size:13px; margin:0;}
-  .legend{display:flex; gap:14px; align-items:center; font-size:12.5px; color:var(--sub);}
+  header.top{
+    display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap;
+    background:linear-gradient(135deg, var(--navy-from), var(--navy-to));
+    padding:26px max(20px, calc((100vw - 1100px)/2 + 20px)) 22px; margin-bottom:22px;
+  }
+  header.top h1{font-size:21px; margin:0 0 5px; letter-spacing:-.2px; font-weight:800; color:#fdfdff;}
+  header.top p{margin:0; color:rgba(255,255,255,.58); font-size:13px; letter-spacing:.1px;}
+  .sync-box{display:flex; align-items:center; gap:8px; font-size:12px; color:rgba(255,255,255,.8); background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); border-radius:20px; padding:6px 8px 6px 12px; backdrop-filter:blur(6px);}
+  .sync-dot{width:7px; height:7px; border-radius:50%; background:var(--gold); flex-shrink:0;}
+  .sync-dot.flash{animation:pulse .9s ease;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(201,162,75,.55);}70%{box-shadow:0 0 0 8px rgba(201,162,75,0);}100%{box-shadow:0 0 0 0 rgba(201,162,75,0);}}
+  .sync-box button{border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.06); color:#fff; cursor:pointer; font-size:12px; font-weight:600; padding:5px 11px; border-radius:20px; font-family:inherit; transition:background .12s;}
+  .sync-box button:hover{background:rgba(255,255,255,.18);}
+
+  .wrap{max-width:1100px; margin:0 auto; padding:0 20px 60px;}
+  .toolbar{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;}
+  .nav{display:flex; align-items:center; gap:8px;}
+  .nav button{
+    background:var(--panel); border:1px solid var(--border); color:var(--text);
+    border-radius:20px; padding:6px 14px; cursor:pointer; font-size:13px; font-weight:600; font-family:inherit;
+    transition:background .12s, border-color .12s;
+  }
+  .nav button:hover{background:var(--hover); border-color:var(--blue);}
+  .nav .ym{font-size:19px; font-weight:800; min-width:128px; text-align:center; letter-spacing:-.2px;}
+  .legend{display:flex; gap:14px; align-items:center; font-size:12px; color:var(--sub); font-weight:600;}
   .dot{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px;}
   .dot.ext{background:var(--orange);}
   .dot.int{background:var(--blue);}
-  .dot.holiday{background:var(--holiday);}
-  .nav{display:flex; align-items:center; gap:14px; margin-bottom:14px;}
-  .nav button{
-    background:var(--panel); border:1px solid var(--border); color:var(--text);
-    border-radius:8px; padding:6px 14px; cursor:pointer; font-size:14px; font-family:inherit;
+  .dot.holiday{background:var(--amber);}
+
+  .cal-card{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow);
+    overflow:hidden; position:relative;
   }
-  .nav button:hover{border-color:var(--blue);}
-  .nav .ym{font-size:17px; font-weight:700; min-width:110px; text-align:center;}
-  .grid{
-    display:grid; grid-template-columns:repeat(5,1fr); gap:6px;
-    background:var(--border); border:1px solid var(--border); border-radius:10px; overflow:hidden;
-  }
-  .dow{background:var(--panel); text-align:center; font-size:12px; color:var(--sub); padding:6px 0; font-weight:600;}
+  .cal-card::before{content:""; position:absolute; top:0; left:18px; right:18px; height:2px; border-radius:0 0 3px 3px; background:var(--blue); opacity:.85; z-index:1;}
+  .grid{display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:1px; background:var(--border);}
+  .dow{background:var(--hover); text-align:center; font-size:12px; color:var(--sub); padding:9px 0 7px; font-weight:700; letter-spacing:.3px;}
   .cell{
-    background:var(--panel); height:110px; padding:6px; display:flex; flex-direction:column; gap:3px;
-    overflow-y:auto; box-sizing:border-box;
+    background:var(--panel); min-height:118px; padding:7px 7px 8px; display:flex; flex-direction:column; gap:3px;
+    box-sizing:border-box; min-width:0; transition:background .12s;
   }
-  .cell.pad{background:var(--bg);}
-  .cell.today{outline:2px solid var(--blue); outline-offset:-2px;}
-  .cell.holiday{background:var(--holiday-bg);}
-  .holiday-name{color:var(--holiday); font-weight:700;}
-  .daynum{font-size:12px; color:var(--sub); font-weight:600; margin-bottom:2px; flex:none;}
+  .cell:hover{background:var(--hover);}
+  .cell.pad{background:var(--hover); opacity:.55;}
+  .cell.pad:hover{background:var(--hover);}
+  .cell.today{box-shadow:inset 0 0 0 2px var(--gold);}
+  .cell.holiday{background:var(--amber-bg);}
+  .holiday-name{color:var(--amber); font-weight:700; font-size:11px; margin-left:4px;}
+  .daynum{font-size:12px; color:var(--sub); font-weight:700; margin-bottom:2px; flex:none; display:flex; align-items:center; min-height:20px;}
+  .cell.today .daynum span.n{background:var(--today-bg); color:var(--today-fg); border-radius:11px; min-width:22px; height:22px; padding:0 6px; display:inline-flex; align-items:center; justify-content:center;}
   .chip{
-    font-size:10.5px; line-height:1.35; padding:2px 6px; border-radius:5px; cursor:default;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:none;
+    font-size:11px; line-height:1.35; padding:2px 6px; border-radius:5px; cursor:default; border-left:3px solid transparent;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:none; font-weight:600;
   }
-  .chip.ext{background:var(--orange-bg); color:var(--orange);}
-  .chip.int{background:var(--blue-bg); color:var(--blue);}
+  .chip .tm{font-weight:800; margin-right:2px; font-variant-numeric:tabular-nums;}
+  .chip.ext{background:var(--orange-bg); color:var(--orange); border-left-color:var(--orange);}
+  .chip.int{background:var(--blue-bg); color:var(--blue); border-left-color:var(--blue);}
   .chip.done{text-decoration:line-through; opacity:0.55;}
+
+  .section-title{font-size:16px; font-weight:800; margin:28px 0 12px; display:flex; align-items:center; gap:9px; letter-spacing:-.1px;}
+  .section-title::before{content:""; width:4px; height:17px; border-radius:2px; background:var(--gold); display:inline-block;}
   .unscheduled{
-    margin-top:24px; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:16px 18px;
+    background:var(--panel); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); padding:8px 20px 6px;
   }
-  .unscheduled h2{font-size:14px; margin:0 0 10px;}
-  .u-item{font-size:12.5px; padding:6px 0; border-bottom:1px solid var(--border); display:flex; gap:8px; align-items:baseline;}
+  .u-item{font-size:13px; padding:9px 0; border-bottom:1px solid var(--border); display:flex; gap:9px; align-items:baseline;}
   .u-item:last-child{border-bottom:none;}
-  .u-tag{font-size:10px; padding:1px 6px; border-radius:5px; flex:none;}
+  .u-tag{font-size:10.5px; font-weight:700; padding:1px 8px; border-radius:20px; flex:none;}
   .u-tag.ext{background:var(--orange-bg); color:var(--orange);}
   .u-tag.int{background:var(--blue-bg); color:var(--blue);}
-  .u-due{color:var(--sub); flex:none;}
-  .note{color:var(--sub); font-size:11.5px; margin-top:10px; line-height:1.6;}
+  .u-due{color:var(--sub); flex:none; font-weight:600;}
+  .note{color:var(--sub); font-size:11.5px; margin-top:12px; line-height:1.6;}
   @media (max-width:700px){
-    .cell{height:80px; font-size:10px;}
-    .chip{font-size:9px;}
+    header.top{padding:20px 16px 16px;}
+    .wrap{padding:0 12px 40px;}
+    .cell{min-height:84px; padding:5px 4px;}
+    .chip{font-size:9.5px; padding:1px 4px;}
+    .nav .ym{min-width:100px; font-size:16px;}
+  }
+  @media print{
+    header.top{background:none; color:#000; padding:0 0 10px;}
+    header.top h1{color:#000;} header.top p, .sync-box{display:none;}
+    .cal-card,.unscheduled{box-shadow:none;}
   }
 </style>
 </head>
 <body>
+<header class="top">
+  <div>
+    <h1>📅 유통지원팀 일정표</h1>
+    <p>구글 시트 연동 · 미팅·일정 월간 보기</p>
+  </div>
+  <div class="sync-box">
+    <span class="sync-dot" id="syncDot"></span>
+    <span id="syncLabel">불러오는 중...</span>
+    <button id="refreshBtn">🔄 새로고침</button>
+  </div>
+</header>
+
 <div class="wrap">
-  <header>
-    <div>
-      <h1>📅 유통지원팀 일정표</h1>
-      <p class="sub" id="syncLabel">불러오는 중...</p>
+  <div class="toolbar">
+    <div class="nav">
+      <button id="prevBtn">◀ 이전달</button>
+      <div class="ym" id="ymLabel"></div>
+      <button id="nextBtn">다음달 ▶</button>
+      <button id="todayBtn">오늘</button>
     </div>
     <div class="legend">
       <span><span class="dot ext"></span>외부미팅</span>
       <span><span class="dot int"></span>사내미팅</span>
       <span><span class="dot holiday"></span>공휴일</span>
     </div>
-  </header>
-
-  <div class="nav">
-    <button id="prevBtn">◀ 이전달</button>
-    <div class="ym" id="ymLabel"></div>
-    <button id="nextBtn">다음달 ▶</button>
-    <button id="todayBtn">오늘</button>
-    <button id="refreshBtn">🔄 새로고침</button>
   </div>
 
-  <div class="grid" id="calGrid"></div>
+  <div class="cal-card"><div class="grid" id="calGrid"></div></div>
 
-  <div class="unscheduled" id="unschedBox" style="display:none;">
-    <h2>🗓 날짜 미정 (수시 / 기간형)</h2>
-    <div id="unschedList"></div>
+  <div id="unschedBox" style="display:none;">
+    <div class="section-title">🗓 날짜 미정 (수시 / 기간형)</div>
+    <div class="unscheduled"><div id="unschedList"></div></div>
     <p class="note">"수시", "~9월"처럼 정확한 날짜가 없는 미팅·회의 건은 달력에 표시가 안 돼서 여기 따로 모아뒀어요.</p>
   </div>
 
@@ -267,7 +310,7 @@ function renderCalendar(){
 
   const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
   const pad = n=>String(n).padStart(2,"0");
-  const todayStr = new Date().toISOString().slice(0,10);
+  const _n = new Date(); const todayStr = `${_n.getFullYear()}-${pad(_n.getMonth()+1)}-${pad(_n.getDate())}`;
 
   // 토·일은 회사 휴무라 아예 표시하지 않는다 — 월~금 평일만 5열로 배치.
   const weekdays = [];
@@ -292,10 +335,10 @@ function renderCalendar(){
     const items = byDate[dateStr] || [];
     const chips = sortByFlow(items).map(m=>{
       const tip = m.title + (m.detail?' — '+m.detail:'') + (m.owners&&m.owners.length?'\n주인: '+m.owners.join(', '):'');
-      return `<div class="chip ${m.cls}${m.done?' done':''}" title="${tip.replace(/"/g,'&quot;')}">${m.done?'✔ ':''}${m.time?m.time+' ':''}${m.detail||m.title}</div>`;
+      return `<div class="chip ${m.cls}${m.done?' done':''}" title="${tip.replace(/"/g,'&quot;')}">${m.done?'✔ ':''}${m.time?`<span class="tm">${m.time}</span> `:''}${m.detail||m.title}</div>`;
     }).join("");
     const holiday = HOLIDAYS[dateStr];
-    html += `<div class="cell ${dateStr===todayStr?'today':''}${holiday?' holiday':''}"><div class="daynum">${d}${holiday?` <span class="holiday-name">${holiday}</span>`:''}</div>${chips}</div>`;
+    html += `<div class="cell ${dateStr===todayStr?'today':''}${holiday?' holiday':''}"><div class="daynum"><span class="n">${d}</span>${holiday?` <span class="holiday-name">${holiday}</span>`:''}</div>${chips}</div>`;
   });
   const totalCells = startWeekday + weekdays.length;
   const trailing = (5 - (totalCells % 5)) % 5;
