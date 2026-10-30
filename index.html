@@ -1069,7 +1069,9 @@ const GAP_DATA = [
   { cls:"kpi-direct", icon:"🔄", label:"직거래 활성화 GAP 메우기", items:[
     {impact:10, text:"<a href=\"https://www.daewoong.co.kr/ko\" target=\"_blank\">고객 클레임 최소화</a>: CS 채널 4개(더샵1·홈페이지2·영업부1) 활성화로 <a href=\"https://docs.google.com/spreadsheets/d/1Nv3R7p5rMBjsEH471K8WksanjLoPkUs3yxpfDiiH1eM/edit?gid=0#gid=0\" target=\"_blank\">클레임 ZERO 도전</a>"},
     {impact:5, text:" 반품 리드타임 단축: 10일 → 7일"},
-    {impact:null, text:"도도매 통제"}
+    {impact27:140, text:"도도매 통제 ① 거점도매 도도매 축소: 월 230억 중 61% 전환 (27.03 거점도매 재선정)"},
+    {impact27:64, text:"도도매 통제 ② 도매몰 종료 물량 전환: 월 106억 중 61% 전환 (26.12.31 도매몰 종료)"},
+    {impact27:12, text:"도도매 통제 ③ 간납 불량 유통 정리: 월 19억 중 61% 전환"}
   ]},
   { cls:"kpi-vc", icon:"🏬", label:"VC 활성화 GAP 메우기", items:[
     {impact:36, text:"VC 활성화 파일럿: 대형병원 문전약국"},
@@ -1093,7 +1095,7 @@ function renderGapPanel(){
     <div class="kpi-card ${g.cls}">
       <div class="kpi-head"><span class="kpi-icon">${g.icon}</span><span class="kpi-label">${g.label}</span></div>
       <ul class="gap-list">
-        ${g.items.map(i=>`<li class="gap-item">${i.impact?`<span class="gap-impact">+${i.impact}억</span>`:''}<span class="gap-text">${i.text}</span></li>`).join("")}
+        ${g.items.map(i=>`<li class="gap-item">${i.impact?`<span class="gap-impact">+${i.impact}억</span>`:i.impact27?`<span class="gap-impact">27년 +${i.impact27}억</span>`:''}<span class="gap-text">${i.text}</span></li>`).join("")}
       </ul>
       ${total>0?`<div class="gap-total">예상 효과 합계 <b>+${total}억</b></div>`:''}
     </div>`;
