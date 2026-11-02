@@ -434,6 +434,16 @@
     .goal span{position:absolute; right:0; top:-1.45em; font-size:.74em; font-weight:700; color:var(--red); background:var(--panel); padding:0 .3em;}
     .gline{position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none;}
     .gline polyline{fill:none; stroke:var(--orange); stroke-width:2.2; vector-effect:non-scaling-stroke; stroke-linejoin:round; stroke-linecap:round;}
+    .bw .jbar{position:absolute; bottom:0; left:50%; width:62%; margin-left:-31%; height:var(--hj); border-radius:.25em .25em 0 0; background:var(--orange); opacity:.3; transform-origin:bottom;}
+    .bw.cur .jbar{opacity:.42;}
+    .bw .jbar ~ .bar{position:relative; z-index:1; opacity:.8;}
+    .bw.cur .jbar ~ .bar, .bw:hover .jbar ~ .bar{opacity:1;}
+    .go .jbar{animation:grow .9s cubic-bezier(.2,.7,.2,1) both; animation-delay:calc(var(--i, 0) * 45ms + .2s);}
+    .bw .vl{position:absolute; left:50%; bottom:calc(var(--hj) + .25em); transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; font-size:.66em; line-height:1.2; white-space:nowrap; pointer-events:none; font-variant-numeric:tabular-nums; z-index:2;}
+    .vl em{font-style:normal; color:var(--orange); font-weight:700;}
+    .vl b{color:var(--accent); font-weight:800; font-size:1.12em;}
+    .vl s{text-decoration:none; color:var(--green); font-weight:700; font-size:.88em; margin-left:.25em;}
+    .goal.lft span{right:auto; left:0;}
     .axis{display:grid; grid-template-columns:repeat(12,1fr); text-align:center; font-size:.74em; color:var(--sub); margin-top:.25em;}
     .axis span.cur{color:var(--text); font-weight:800;}
     .cnote{font-size:.74em; color:var(--sub); margin-top:.3em; display:flex; flex-wrap:wrap; gap:.3em 1em;}
@@ -726,9 +736,9 @@ const KPI_DATA = [
       {m:7, pharma:41, group:33, revenue:236, hub:478}, {m:8, pharma:44, group:34, revenue:218, hub:423}, {m:9, pharma:45, group:33, revenue:222, hub:445},
       {m:10, pharma:null, group:null, revenue:null, hub:null}, {m:11, pharma:null, group:null, revenue:null, hub:null}, {m:12, pharma:null, group:null, revenue:null, hub:null}
     ] },
-  { cls:"kpi-vc", icon:"🏬", label:"VC 활성화", value:"월 33.0억", target:"목표 월 110억",
+  { cls:"kpi-vc", icon:"🏬", label:"VC 활성화", value:"월 33.5억", target:"목표 월 110억",
     link:"vctarget://open", linkTitle:"VC매출 타겟처 대시보드 열기 (VC타겟_프로토콜_등록.reg 등록된 PC에서만 작동)",
-    pct:Math.round((33.0-10)/(110-10)*100), valueNote:"(잔여 gap 월 77.0억)",
+    pct:Math.round((33.5-10)/(110-10)*100), valueNote:"(잔여 gap 월 76.5억)",
     monthlyBase:"25년 월 10억", monthlyUnit:"억",
     monthlyRows:[{label:"매출",field:"val",unit:""},{label:"백제",field:"baekje",unit:""},{label:"복산",field:"boksan",unit:""},{label:"인천",field:"incheon",unit:""}],
     // 출처: 유통지원팀 26년 상반기 성과 및 하반기 전략(최종).xlsx · Sheet1 R34-35 · 도매별 매출(백제/복산/인천)은 vc매출.png (4~8월) · 9월부터는 더샵플러스 회원 매출 현황.xlsx(일자별 합산)
@@ -736,14 +746,14 @@ const KPI_DATA = [
       {m:1, val:24, baekje:null, boksan:null, incheon:null}, {m:2, val:22, baekje:null, boksan:null, incheon:null}, {m:3, val:25, baekje:null, boksan:null, incheon:null},
       {m:4, val:29, baekje:14.5, boksan:7.3, incheon:8.1}, {m:5, val:27, baekje:13.6, boksan:6.8, incheon:7.3},
       {m:6, val:31, baekje:14.3, boksan:8, incheon:8.7}, {m:7, val:32, baekje:14.6, boksan:7.9, incheon:9.4}, {m:8, val:31.2, baekje:14.2, boksan:7.6, incheon:9.4}, {m:9, val:32.1, baekje:14.9, boksan:7.4, incheon:9.8},
-      {m:10, val:33.0, baekje:14.1, boksan:8.5, incheon:10.4}, {m:11, val:null, baekje:null, boksan:null, incheon:null}, {m:12, val:null, baekje:null, boksan:null, incheon:null}
+      {m:10, val:33.5, baekje:14.3, boksan:8.7, incheon:10.5}, {m:11, val:null, baekje:null, boksan:null, incheon:null}, {m:12, val:null, baekje:null, boksan:null, incheon:null}
     ],
     // 처수 — 출처: (약국몰)유통지원공유용_더샵플러스 월별 가동률_261029_ver.1.xlsx (가입처수·가동처수, 10월은 28일 마감 기준)
     //        목표 가동처수 2,621처: (26.09)더샵플러스 현황지표.xlsx 사업지표 (누적 로컬문전 약국 3,854처 × 80% × 85%)
-    outlets:{ goal:2621, asof:"28일 마감 기준",
+    outlets:{ goal:2621, asof:"마감 기준",
       monthly:[
         {m:1, join:1172, act:770}, {m:2, join:1258, act:806}, {m:3, join:1354, act:889}, {m:4, join:1451, act:997}, {m:5, join:1486, act:1035},
-        {m:6, join:1505, act:1097}, {m:7, join:1523, act:1094}, {m:8, join:1533, act:1095}, {m:9, join:1534, act:1096}, {m:10, join:1825, act:1238},
+        {m:6, join:1505, act:1097}, {m:7, join:1523, act:1094}, {m:8, join:1533, act:1095}, {m:9, join:1534, act:1096}, {m:10, join:1852, act:1313},
         {m:11, join:null, act:null}, {m:12, join:null, act:null}
       ] } },
   // 블록형 거점 도매 서비스: 거점 / 종합 / VC 3분할 (출처: SLA평가/SLA 평가 종합_완료_9월_2차.xlsx · 종합 관리장 시트)
@@ -950,16 +960,20 @@ const nfc = v => v==null ? "-" : v.toLocaleString("ko-KR");
 function outletChart(k, big){
   const o = k.outlets, m = o.monthly, li = lastIdx(m, "act");
   const scale = Math.max(o.goal, ...m.map(x=>x.join||0)) * 1.15;
+  const dl = (i,f)=> (i>0 && m[i][f]!=null && m[i-1][f]!=null) ? m[i][f]-m[i-1][f] : null;
+  const sg = d => d==null ? "" : ` (${d<0?"▼":"▲"}${nfc(Math.abs(d))})`;
+  const sh = d => d==null ? "" : `<s>${d<0?"▼":"▲"}${nfc(Math.abs(d))}</s>`;
   const cols = m.map((x,i)=>{
     const v = x.act, st = v==null ? "future" : (i===li ? "cur" : "past");
-    const tip = v==null ? `${x.m}월 · 아직 없음` : `${x.m}월 · 가동처 ${nfc(v)} · 가입처 ${nfc(x.join)}`;
-    return `<div class="bw ${st}" style="--h:${v==null ? 0 : (v/scale*100).toFixed(1)}%" data-tip="${tip}" tabindex="0">${v==null ? "" : `<i class="bar" style="--i:${i}"></i>`}${i===li&&!big ? '<b class="blink"></b>' : ""}</div>`;
+    const tip = v==null ? `${x.m}월 · 아직 없음` : `${x.m}월 · 가동처 ${nfc(v)}${sg(dl(i,"act"))} · 가입처 ${nfc(x.join)}${sg(dl(i,"join"))}`;
+    const hj = v==null ? 0 : (x.join/scale*100).toFixed(1);
+    const jb = v==null ? "" : `<i class="jbar" style="--hj:${hj}%;--i:${i}"></i>`;
+    const lab = i===li ? `<span class="vl"><em>${nfc(x.join)}${sh(dl(i,"join"))}</em><b>${nfc(v)}${sh(dl(i,"act"))}</b></span>` : "";
+    return `<div class="bw ${st}" style="--h:${v==null ? 0 : (v/scale*100).toFixed(1)}%;--hj:${hj}%" data-tip="${tip}" tabindex="0">${jb}${v==null ? "" : `<i class="bar" style="--i:${i}"></i>`}${lab}</div>`;
   }).join("");
-  const pts = m.map((x,i)=> x.join==null ? null : `${i+0.5},${(100-x.join/scale*100).toFixed(1)}`).filter(Boolean).join(" ");
-  const overlay = `<div class="goal" style="--b:${(o.goal/scale*100).toFixed(1)}%"><span>목표 ${nfc(o.goal)}처</span></div>`
-    + `<svg class="gline" viewBox="0 0 12 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}"/></svg>`;
+  const overlay = `<div class="goal lft" style="--b:${(o.goal/scale*100).toFixed(1)}%"><span>목표 ${nfc(o.goal)}처</span></div>`;
   const axis = m.map((x,i)=>`<span class="${i===li?'cur':''}">${x.m}월</span>`).join("");
-  const note = `<span><i style="background:var(--accent)"></i>가동처수(막대)</span><span><i style="background:var(--orange)"></i>가입처수(선)</span>` + (big ? `<span>점선: 목표 ${nfc(o.goal)}처 · ${m[li].m}월은 ${o.asof}</span>` : "");
+  const note = `<span><i style="background:var(--accent)"></i>가동처수(진한 막대·핵심)</span><span><i style="background:var(--orange);opacity:.4"></i>가입처수(연한 막대·가동처 포함)</span>` + (big ? `<span>점선: 목표 ${nfc(o.goal)}처 · ${m[li].m}월은 ${o.asof} · ▲ 전월 대비 증가</span>` : "");
   return `<div class="chart${big?' big':''}"><div class="plot"><div class="cols">${cols}</div>${overlay}</div><div class="axis">${axis}</div><div class="cnote">${note}</div></div>`;
 }
 
@@ -968,17 +982,21 @@ function numCellOutlets(k){
   const d = prev ? cur.act - prev.act : null;
   const dTxt = d==null ? "" : `<span class="delta${d<0?' dn':''}">${d<0?'▼':'▲'} ${nfc(Math.abs(d))}처</span>`;
   const pct = Math.round(cur.act / o.goal * 100);
+  const dJ = prev && prev.join!=null ? cur.join - prev.join : null;
+  const dj = dJ==null ? "" : ` <b>${dJ<0?"▼":"▲"}${nfc(Math.abs(dJ))}</b>`;
   return `<button type="button" class="numcell nc-out" data-toggle="pillar" aria-expanded="false" title="눌러서 상세 보기">
       <span class="nl">${cur.m}월 가동처수 <em>(${o.asof})</em></span>
       <span class="nv">${nfc(cur.act)}<small>처</small>${dTxt}</span>
-      <span class="ns">목표 <b>${nfc(o.goal)}처</b> 중 <b>${pct}%</b> · 가입처 <b>${nfc(cur.join)}</b></span>
+      <span class="ns">목표 <b>${nfc(o.goal)}처</b> 중 <b>${pct}%</b> · 가입처 <b>${nfc(cur.join)}</b>${dj}</span>
       <span class="nbar"><i style="--w:${Math.min(100,pct)}%"></i></span>
     </button>`;
 }
 
 function outletDetail(k){
   const o = k.outlets;
-  const table = renderKpiMonthly({ monthly:o.monthly, monthlyRows:[{label:"가동처",field:"act",unit:""},{label:"가입처",field:"join",unit:""}],
+  const sd = (i,f)=>{ const p=o.monthly[i-1], x=o.monthly[i]; if(!p||x[f]==null||p[f]==null) return null; const d=x[f]-p[f]; return (d>0?"+":d<0?"-":"")+nfc(Math.abs(d)); };
+  const mm = o.monthly.map((x,i)=>({...x, dact:sd(i,"act"), djoin:sd(i,"join")}));
+  const table = renderKpiMonthly({ monthly:mm, monthlyRows:[{label:"가동처",field:"act",unit:""},{label:"증감",field:"dact",unit:""},{label:"가입처",field:"join",unit:""},{label:"증감",field:"djoin",unit:""}],
     monthlyUnit:"", monthlyBase:`목표 가동처수 ${nfc(o.goal)}처 (로컬문전 약국 3,854처 × 80% × 85%)`, unitLabel:"단위: 처" });
   return `<div class="dsub">처수 (가입처·가동처)</div>${outletChart(k, true)}${table}`;
 }
