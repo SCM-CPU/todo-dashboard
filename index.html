@@ -876,7 +876,7 @@ function monthChart(k, kind, big){
         } else inner = `<i class="bar" style="--i:${i}"></i>`;
       } else {
         const has3 = x.baekje!=null;
-        tip = `${x.m}월 · ${nf(x.val)}억` + (has3 ? ` (백제 ${x.baekje} · 복산 ${x.boksan} · 인천 ${x.incheon})` : "");
+        tip = `${x.m}월 · ${nf(x.val)}억${x.partial?" (진행 중)":""}` + (has3 ? ` (백제 ${x.baekje} · 복산 ${x.boksan} · 인천 ${x.incheon})` : "");
         if(big){
           inner = has3
             ? `<div class="stk" style="--i:${i}"><i style="flex:${x.baekje};background:var(--c-baekje)"></i><i style="flex:${x.boksan};background:var(--c-boksan)"></i><i style="flex:${x.incheon};background:var(--c-incheon)"></i></div>`
@@ -936,7 +936,7 @@ function svcHint(k){
 function numCellDirectVc(k, kind){
   const m = k.monthly;
   const f = kind==="direct" ? "pharma" : "val";
-  const li = lastIdx(m, f);
+  let li = lastIdx(m, f); while(li>0 && m[li].partial) li--;   // 진행 중인 달(partial)은 큰 숫자에서 제외: 마감된 달 기준
   const cur = m[li], prev = li>0 ? m[li-1] : null;
   const d = prev && prev[f]!=null ? cur[f]-prev[f] : null;
   const unit = kind==="direct" ? "%" : "억";
