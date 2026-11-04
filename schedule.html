@@ -112,7 +112,11 @@
     header.top h1{color:#000;} header.top p, .sync-box{display:none;}
     .cal-card,.unscheduled{box-shadow:none;}
   }
+  html.embed header.top, html.embed #unschedBox, html.embed .wrap > .note{display:none !important;}
+  html.embed .wrap{padding:10px 12px 12px;}
 </style>
+<script>if(new URLSearchParams(location.search).has("embed")){document.documentElement.className="embed";
+addEventListener("load",function(){var w=document.querySelector(".wrap"),p=function(){parent.postMessage({schedH:Math.ceil(w.getBoundingClientRect().height)+2},"*")};new ResizeObserver(p).observe(w);p();});}</script>
 </head>
 <body>
 <header class="top">
