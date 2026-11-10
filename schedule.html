@@ -99,6 +99,23 @@
   .u-tag.ext{background:var(--orange-bg); color:var(--orange);}
   .u-tag.int{background:var(--blue-bg); color:var(--blue);}
   .u-due{color:var(--sub); flex:none; font-weight:600;}
+  #unschedBox{background:var(--blue-bg); border:1px solid var(--border); border-top:4px solid var(--blue); border-radius:14px; padding:2px 20px 10px; margin-top:36px;}
+  #unschedBox .section-title{margin-top:18px; color:var(--blue);}
+  #unschedBox .section-title::before{background:var(--blue);}
+  #unschedBox .note{margin-top:4px;}
+  .unscheduled.plain{background:none; border:none; box-shadow:none; padding:0;}
+  .u-group{margin:0 0 16px;}
+  .u-gh{display:flex; align-items:center; gap:8px; margin:0 0 8px; font-size:12px; font-weight:700; color:var(--sub);}
+  .u-gh .p{background:var(--gold-bg); color:var(--amber); border-radius:20px; padding:2px 11px; font-weight:800;}
+  .u-gh .p.past{background:var(--hover); color:var(--sub);}
+  .u-cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px;}
+  .u-card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:10px 14px 6px; box-shadow:var(--shadow);}
+  .u-card h4{margin:0 0 4px; font-size:13.5px; font-weight:800; display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .u-card h4 small{color:var(--sub); font-weight:600; font-size:11px; flex:none;}
+  .u-row{font-size:12.5px; padding:6px 0; border-top:1px solid var(--border); display:flex; gap:7px; align-items:baseline; line-height:1.45;}
+  .u-row .ck{flex:none; color:var(--sub);}
+  .u-row.done{color:var(--sub); text-decoration:line-through; opacity:.65;}
+  .u-row.done .ck{color:var(--blue);}
   .note{color:var(--sub); font-size:11.5px; margin-top:12px; line-height:1.6;}
   @media (max-width:700px){
     header.top{padding:20px 16px 16px;}
@@ -150,7 +167,7 @@ addEventListener("load",function(){var w=document.querySelector(".wrap"),p=funct
 
   <div id="unschedBox" style="display:none;">
     <div class="section-title">🗓 날짜 미정 (수시 / 기간형)</div>
-    <div class="unscheduled"><div id="unschedList"></div></div>
+    <div class="unscheduled plain"><div id="unschedList"></div></div>
     <p class="note">"수시", "~9월"처럼 정확한 날짜가 없는 미팅·회의 건은 달력에 표시가 안 돼서 여기 따로 모아뒀어요.</p>
   </div>
 
@@ -350,18 +367,36 @@ function renderCalendar(){
 
   grid.innerHTML = html;
 
-  // "~9월"처럼 월말로 계산되는 monthend 타입은 지난 달이면 이미 지난 일정이므로 제외한다.
-  // "수시" 같은 adhoc 타입은 날짜 자체가 없어 지났는지 판단할 수 없으니 그대로 둔다.
-  const unsched = MEETINGS.filter(m=>m.dtype!=="date" && !(m.dtype==="monthend" && m.ddate < todayStr));
+  // 지난 기간형("~9월" 등)도 숨기지 않고 맨 아래에 "지난 기한" 구간으로 모아 보여준다.
+  const unsched = MEETINGS.filter(m=>m.dtype!=="date");
   const box = document.getElementById("unschedBox");
   if(unsched.length){
     box.style.display = "block";
-    document.getElementById("unschedList").innerHTML = unsched.map(m=>`
-      <div class="u-item" title="${m.owners&&m.owners.length?('주인: '+m.owners.join(', ')).replace(/"/g,'&quot;'):''}">
-        <span class="u-tag ${m.cls}">${m.cls==='ext'?'외부':'사내'}</span>
-        <span class="u-due">${m.ddText||'-'}${m.time?' '+m.time:''}</span>
-        <span${m.done?' style="text-decoration:line-through;opacity:0.55;"':''}>${m.done?'✔ ':''}${m.title}${m.detail?' — '+m.detail:''}</span>
-      </div>`).join("");
+    // 기한 구간(~11월, ~12월 … → 수시 → 지난 기한) 순서로 묶고, 구간 안에서는 같은 프로젝트(제목)끼리 카드 하나로 모은다.
+    const esc = s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+    const bands = {};
+    unsched.forEach(m=>{
+      const past = m.dtype==="monthend" && m.ddate < todayStr;
+      // 정렬 키: 앞으로 올 기한(0, 가까운 순) → 수시(1) → 지난 기한(2, 최근 순)
+      const key = m.dtype!=="monthend" ? "1" : past ? "2"+String(30000000-parseInt(m.ddate.replace(/-/g,""))) : "0"+m.ddate;
+      const label = m.dtype==="monthend" ? (m.ddText||"").trim() + (past?" · 지난 기한":"") : "수시";
+      const b = bands[key] = bands[key] || {label, past, projects:{}};
+      const pk = m.title || m.detail || "기타";
+      (b.projects[pk] = b.projects[pk] || []).push(m);
+    });
+    document.getElementById("unschedList").innerHTML = Object.keys(bands).sort().map(k=>{
+      const b = bands[k];
+      const cards = Object.keys(b.projects).map(pk=>{
+        const items = b.projects[pk];
+        const doneN = items.filter(x=>x.done).length;
+        const rows = items.slice().sort((x,y)=>(x.done?1:0)-(y.done?1:0)).map(x=>`
+          <div class="u-row${x.done?' done':''}" title="${esc(x.owners&&x.owners.length?'주인: '+x.owners.join(', '):'')}">
+            <span class="ck">${x.done?'✔':'○'}</span><span>${esc(x.detail||x.title)}${x.time?' '+esc(x.time):''}</span>
+          </div>`).join("");
+        return `<div class="u-card"><h4>${esc(pk)}<small>${doneN}/${items.length}</small></h4>${rows}</div>`;
+      }).join("");
+      return `<div class="u-group"><div class="u-gh"><span class="p${b.past?' past':''}">${esc(b.label)}</span></div><div class="u-cards">${cards}</div></div>`;
+    }).join("");
   } else {
     box.style.display = "none";
   }
