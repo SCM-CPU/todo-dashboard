@@ -780,11 +780,11 @@ const KPI_DATA = [
     ],
     trend:{ title:"항목별 평균 추이 (%)", months:["5월","6월","7월","8월","9월","10월"],
       rows:[
-        {label:"DCM 연동율", vals:[59.8,72.2,79.6,85.6,87.8,90.7], tip:"연동처 수 ÷ 거래처 수 · 목표 95%↑"},
+        {label:"DCM 연동율", vals:[59.4,72.2,79.6,85.6,87.0,90.2], tip:"연동처 수 ÷ 거래처 수 · 목표 95%↑"},
         {label:"권역 외 유통", vals:[18.0,16.8,19.3,19.9,16.0,14.2], tip:"권역 외 공급액 ÷ 총 공급액 · 낮을수록 좋음"},
         {label:"권역 커버리지", vals:[98.5,100.5,113.6,97.8,94.3,105.5], tip:"총 공급액 ÷ 권역 시장규모"}
       ],
-      note:"종합도매 9개사 단순 평균" } },
+      note:"종합도매 9개사 평균 · DCM 연동율은 5·9·10월은 처수 합산 기준(복산 도도매 1회 반영), 6~8월은 업체 단순평균" } },
   { cls:"kpi-svc", icon:"⭐", label:"블록형 · VC도매", value:"B등급↑ 3/3 (10월 3/3)", target:"3사 평가 (구색 30 · 재고 15 · 반품 25 · 품절 25)",
     link:"https://script.google.com/macros/s/AKfycbz7CQu1gxzFQWtgu_BTommoaoWie4oHoN1BvhjBOG8cLItnGwL_qdwli6uF6L83J-I/exec", linkTitle:"VC 대시보드 열기",
     pct:Math.round(3/3*100), sub:"10월 3사 전원 B(인천 84 · 복산 84 · 백제 76) · 11월 중간(11/10) 인천 86 · 복산 86 · 백제 84 상승",
