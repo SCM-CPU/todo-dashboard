@@ -881,7 +881,7 @@ function monthChart(k, kind, big){
         const has3 = x.baekje!=null;
         tip = big   // 상세(큰) 그래프: 협력사별 금액만 / 메인(작은) 그래프: 월 매출 + 순도(진행 중인 달)
           ? (has3 ? `${x.m}월 · 백제 ${nf(x.baekje)}억 · 복산 ${nf(x.boksan)}억 · 인천 ${nf(x.incheon)}억` : `${x.m}월 · ${nf(x.val)}억`)
-          : `${x.m}월 ${nf(x.val)}억` + (x.pp!=null ? ` (순도: ${x.bd}영업일 ${nf(x.pv)}억 / ${x.pp>0?"+":""}${x.pp}%)` : "");
+          : `${x.m}월 ${nf(x.val)}억` + (x.pp!=null ? ` (순도: ${x.bd}영업일 ${nf(x.pv)}억 / ${(x.val-x.pv)<0?"-":"+"}${nf(Math.round(Math.abs(x.val-x.pv)*10)/10)}억 / ${x.pp>0?"+":""}${x.pp.toFixed(1)}%)` : "");
         if(big){
           inner = has3
             ? `<div class="stk" style="--i:${i}"><i style="flex:${x.baekje};background:var(--c-baekje)"></i><i style="flex:${x.boksan};background:var(--c-boksan)"></i><i style="flex:${x.incheon};background:var(--c-incheon)"></i></div>`
@@ -948,7 +948,7 @@ function numCellDirectVc(k, kind){
   const dTxt = d==null ? "" : `<span class="delta${d<0?' dn':''}">${d<0?'▼':'▲'} ${nf(Math.abs(Math.round(d*10)/10))}${kind==="direct"?'%p':'억'}</span>`;
   const label = kind==="direct" ? `${cur.m}월 제약 직거래율` : `${cur.m}월 VC 매출`;
   const pcur = kind==="vc" ? m.find(x=>x.partial && x.pp!=null) : null;   // 순도: 진행 중인 달 vs 지난달 같은 영업일 수 누계
-  const pcTxt = pcur ? `<br><b>${pcur.asof} 현재 ${nf(pcur.val)}억</b> · ${pcur.pvm}월 같은 ${pcur.bd}영업일 대비 <b class="pc${pcur.pp<0?' dn':''}">${pcur.pp<0?'▼':'▲'} ${Math.abs(pcur.pp).toFixed(1)}%</b> <small>(${nf(pcur.pv)}억 → ${nf(pcur.val)}억)</small>` : "";
+  const pcTxt = pcur ? `<br><b>${pcur.asof} 현재 ${nf(pcur.val)}억</b> · ${pcur.pvm}월 같은 ${pcur.bd}영업일 대비 <b class="pc${pcur.pp<0?' dn':''}">${pcur.pp<0?'▼':'▲'} ${Math.abs(pcur.pp).toFixed(1)}%</b> <small>(${nf(pcur.pv)}억 → ${nf(pcur.val)}억 · ${(pcur.val-pcur.pv)<0?"-":"+"}${nf(Math.round(Math.abs(pcur.val-pcur.pv)*10)/10)}억)</small>` : "";
   const ns = kind==="direct"
     ? `그룹사 <b>${cur.group}%</b> · ${k.target}<br>${stripParen(k.valueNote)}`
     : `${k.target}<br>${stripParen(k.valueNote)}${pcTxt}`;
@@ -974,7 +974,7 @@ function outletChart(k, big){
   const cols = m.map((x,i)=>{
     const v = x.act, st = v==null ? "future" : (i===li ? "cur" : "past");
     const tip = v==null ? `${x.m}월 · 아직 없음` : (!big && x.partial && x.pp!=null)
-      ? `${x.m}월 ${nfc(v)}처 (순도: ${x.bd}영업일 ${nfc(x.pv)}처 / ${x.pp>0?"+":""}${x.pp}%)`
+      ? `${x.m}월 ${nfc(v)}처 (순도: ${x.bd}영업일 ${nfc(x.pv)}처 / ${(x.act-x.pv)<0?"-":"+"}${nfc(Math.abs(x.act-x.pv))}처 / ${x.pp>0?"+":""}${x.pp.toFixed(1)}%)`
       : `${x.m}월 · 가동처 ${nfc(v)}${sg(dl(i,"act"))}` + (x.join!=null ? ` · 가입처 ${nfc(x.join)}${sg(dl(i,"join"))}` : "");
     const hj = v==null ? 0 : (x.join/scale*100).toFixed(1);
     const jb = (v==null || x.join==null) ? "" : `<i class="jbar" style="--hj:${hj}%;--i:${i}"></i>`;
@@ -991,7 +991,7 @@ function numCellOutlets(k){
   const o = k.outlets, m = o.monthly; let li = lastIdx(m, "act"); while(li>0 && m[li].partial) li--;   // 진행 중인 달은 큰 숫자에서 제외(마감된 달 기준)
   const cur = m[li], prev = m[li-1];
   const pcur = m.find(x=>x.partial && x.pp!=null);
-  const pcTxt = pcur ? `<br><b>${pcur.asof} 현재 ${nfc(pcur.act)}처</b> · ${pcur.pvm}월 같은 ${pcur.bd}영업일 대비 <b class="pc${pcur.pp<0?' dn':''}">${pcur.pp<0?'▼':'▲'} ${Math.abs(pcur.pp).toFixed(1)}%</b> <small>(${nfc(pcur.pv)} → ${nfc(pcur.act)}처)</small>` : "";
+  const pcTxt = pcur ? `<br><b>${pcur.asof} 현재 ${nfc(pcur.act)}처</b> · ${pcur.pvm}월 같은 ${pcur.bd}영업일 대비 <b class="pc${pcur.pp<0?' dn':''}">${pcur.pp<0?'▼':'▲'} ${Math.abs(pcur.pp).toFixed(1)}%</b> <small>(${nfc(pcur.pv)} → ${nfc(pcur.act)}처 · ${(pcur.act-pcur.pv)<0?"-":"+"}${nfc(Math.abs(pcur.act-pcur.pv))}처)</small>` : "";
   const d = prev ? cur.act - prev.act : null;
   const dTxt = d==null ? "" : `<span class="delta${d<0?' dn':''}">${d<0?'▼':'▲'} ${nfc(Math.abs(d))}처</span>`;
   const pct = Math.round(cur.act / o.goal * 100);
