@@ -966,6 +966,7 @@ const nfc = v => v==null ? "-" : v.toLocaleString("ko-KR");
 
 function outletChart(k, big){
   const o = k.outlets, m = o.monthly, li = lastIdx(m, "act");
+  let ci = li; while(ci>0 && m[ci].partial) ci--;   // 값 라벨은 마감된 달에 붙인다(진행 중인 달은 라벨 없음)
   const scale = Math.max(o.goal, ...m.map(x=>x.join||0)) * 1.15;
   const dl = (i,f)=> (i>0 && !m[i].partial && m[i][f]!=null && m[i-1][f]!=null) ? m[i][f]-m[i-1][f] : null;   // 진행 중인 달은 전월 대비 증감 대신 순도
   const sg = d => d==null ? "" : ` (${d<0?"▼":"▲"}${nfc(Math.abs(d))})`;
@@ -974,10 +975,10 @@ function outletChart(k, big){
     const v = x.act, st = v==null ? "future" : (i===li ? "cur" : "past");
     const tip = v==null ? `${x.m}월 · 아직 없음` : (!big && x.partial && x.pp!=null)
       ? `${x.m}월 ${nfc(v)}처 (순도: ${x.bd}영업일 ${nfc(x.pv)}처 / ${x.pp>0?"+":""}${x.pp}%)`
-      : `${x.m}월 · 가동처 ${nfc(v)}${sg(dl(i,"act"))} · 가입처 ${nfc(x.join)}${sg(dl(i,"join"))}`;
+      : `${x.m}월 · 가동처 ${nfc(v)}${sg(dl(i,"act"))}` + (x.join!=null ? ` · 가입처 ${nfc(x.join)}${sg(dl(i,"join"))}` : "");
     const hj = v==null ? 0 : (x.join/scale*100).toFixed(1);
-    const jb = v==null ? "" : `<i class="jbar" style="--hj:${hj}%;--i:${i}"></i>`;
-    const lab = i===li ? `<span class="vl"><em>${nfc(x.join)}${sh(dl(i,"join"))}</em><b>${nfc(v)}${sh(dl(i,"act"))}</b></span>` : "";
+    const jb = (v==null || x.join==null) ? "" : `<i class="jbar" style="--hj:${hj}%;--i:${i}"></i>`;
+    const lab = i===ci ? `<span class="vl"><em>${nfc(x.join)}${sh(dl(i,"join"))}</em><b>${nfc(v)}${sh(dl(i,"act"))}</b></span>` : "";
     return `<div class="bw ${st}" style="--h:${v==null ? 0 : (v/scale*100).toFixed(1)}%;--hj:${hj}%" data-tip="${tip}" tabindex="0">${jb}${v==null ? "" : `<i class="bar" style="--i:${i}"></i>`}${lab}</div>`;
   }).join("");
   const overlay = `<div class="goal lft" style="--b:${(o.goal/scale*100).toFixed(1)}%"><span>목표 ${nfc(o.goal)}처</span></div>`;
