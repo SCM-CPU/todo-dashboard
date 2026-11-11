@@ -408,6 +408,8 @@
     .delta.dn{background:rgba(255,120,110,.2); color:#ffaaa3;}
     .numcell .ns{font-size:.86em; color:rgba(255,255,255,.78); line-height:1.4;}
     .numcell .ns b{color:#fff;}
+    .numcell .ns .pc{font-weight:800;color:#6df0a8;}
+    .numcell .ns .pc.dn{color:#ffaaa3;}
     .nbar{height:.42em; border-radius:1em; background:rgba(255,255,255,.14); overflow:hidden; margin-top:.35em;}
     .nbar i{display:block; height:100%; width:var(--w); border-radius:1em; background:linear-gradient(90deg, var(--accent-l), #fff); transform-origin:left;}
     .chip-ok{font-size:.38em; font-weight:800; color:#1b1500; background:#e6cd8c; padding:.15em .7em; border-radius:2em; letter-spacing:0;}
@@ -740,8 +742,8 @@ const KPI_DATA = [
   { cls:"kpi-vc", icon:"🏬", label:"VC 활성화", value:"월 33.5억", target:"목표 월 110억",
     link:"vctarget://open", linkTitle:"VC매출 타겟처 대시보드 열기 (VC타겟_프로토콜_등록.reg 등록된 PC에서만 작동)",
     pct:Math.round((33.5-10)/(110-10)*100), valueNote:"(잔여 gap 월 76.5억)",
-    monthlyBase:"25년 월 10억", monthlyUnit:"억",
-    monthlyRows:[{label:"매출",field:"val",unit:""},{label:"백제",field:"baekje",unit:""},{label:"복산",field:"boksan",unit:""},{label:"인천",field:"incheon",unit:""}],
+    monthlyBase:"25년 월 10억 · 순도 = 진행 중인 달을 지난달 같은 영업일 수 누계와 비교한 증감", monthlyUnit:"억",
+    monthlyRows:[{label:"매출",field:"val",unit:""},{label:"백제",field:"baekje",unit:""},{label:"복산",field:"boksan",unit:""},{label:"인천",field:"incheon",unit:""},{label:"순도",field:"pp",unit:"%"}],
     // 출처: 유통지원팀 26년 상반기 성과 및 하반기 전략(최종).xlsx · Sheet1 R34-35 · 도매별 매출(백제/복산/인천)은 vc매출.png (4~8월) · 9월부터는 더샵플러스 회원 매출 현황.xlsx(일자별 합산)
     monthly:[
       {m:1, val:24, baekje:null, boksan:null, incheon:null}, {m:2, val:22, baekje:null, boksan:null, incheon:null}, {m:3, val:25, baekje:null, boksan:null, incheon:null},
@@ -807,7 +809,7 @@ const KPI_DATA = [
 function renderKpiMonthly(k){
   const heads = k.monthly.map(x=>`<th>${x.m}월</th>`).join("");
   const row = (label, field, unit) => `<tr><td>${label}</td>` +
-    k.monthly.map(x=>`<td${x[field]==null?' class="empty"':''}>${x[field]!=null?x[field]+unit:'-'}</td>`).join("") + `</tr>`;
+    k.monthly.map(x=>`<td${x[field]==null?' class="empty"':''}>${x[field]!=null?(field==="pp"&&x[field]>0?"+":"")+x[field]+unit:'-'}</td>`).join("") + `</tr>`;
   const rows = k.monthlyRows.map(r=>row(r.label,r.field,r.unit!==undefined?r.unit:k.monthlyUnit)).join("");
   return `
     <div class="kpi-monthly">
@@ -877,7 +879,7 @@ function monthChart(k, kind, big){
         } else inner = `<i class="bar" style="--i:${i}"></i>`;
       } else {
         const has3 = x.baekje!=null;
-        tip = `${x.m}월 · ${nf(x.val)}억${x.partial?(x.asof?` (${x.asof} 현재, 진행 중)`:" (진행 중)"):""}` + (has3 ? ` (백제 ${x.baekje} · 복산 ${x.boksan} · 인천 ${x.incheon})` : "");
+        tip = `${x.m}월 · ${nf(x.val)}억${x.partial?(x.asof?` (${x.asof} 현재, 진행 중)`:" (진행 중)"):""}` + (has3 ? ` (백제 ${x.baekje} · 복산 ${x.boksan} · 인천 ${x.incheon})` : "") + (x.pp!=null ? ` · 순도 ${x.pvm}월 같은 ${x.bd}영업일 대비 ${x.pp>0?"+":""}${x.pp}%` : "");
         if(big){
           inner = has3
             ? `<div class="stk" style="--i:${i}"><i style="flex:${x.baekje};background:var(--c-baekje)"></i><i style="flex:${x.boksan};background:var(--c-boksan)"></i><i style="flex:${x.incheon};background:var(--c-incheon)"></i></div>`
@@ -943,9 +945,11 @@ function numCellDirectVc(k, kind){
   const unit = kind==="direct" ? "%" : "억";
   const dTxt = d==null ? "" : `<span class="delta${d<0?' dn':''}">${d<0?'▼':'▲'} ${nf(Math.abs(Math.round(d*10)/10))}${kind==="direct"?'%p':'억'}</span>`;
   const label = kind==="direct" ? `${cur.m}월 제약 직거래율` : `${cur.m}월 VC 매출`;
+  const pcur = kind==="vc" ? m.find(x=>x.partial && x.pp!=null) : null;   // 순도: 진행 중인 달 vs 지난달 같은 영업일 수 누계
+  const pcTxt = pcur ? `<br><b>${pcur.asof} 현재 ${nf(pcur.val)}억</b> · ${pcur.pvm}월 같은 ${pcur.bd}영업일 대비 <b class="pc${pcur.pp<0?' dn':''}">${pcur.pp<0?'▼':'▲'} ${Math.abs(pcur.pp).toFixed(1)}%</b> <small>(${nf(pcur.pv)}억 → ${nf(pcur.val)}억)</small>` : "";
   const ns = kind==="direct"
     ? `그룹사 <b>${cur.group}%</b> · ${k.target}<br>${stripParen(k.valueNote)}`
-    : `${k.target}<br>${stripParen(k.valueNote)}`;
+    : `${k.target}<br>${stripParen(k.valueNote)}${pcTxt}`;
   return `<button type="button" class="numcell" data-toggle="pillar" aria-expanded="false" title="눌러서 상세 보기">
       <span class="nl">${label}</span>
       <span class="nv">${nf(cur[f])}<small>${unit}</small>${dTxt}</span>
