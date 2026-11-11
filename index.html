@@ -879,7 +879,9 @@ function monthChart(k, kind, big){
         } else inner = `<i class="bar" style="--i:${i}"></i>`;
       } else {
         const has3 = x.baekje!=null;
-        tip = `${x.m}월 · ${nf(x.val)}억${x.partial?(x.asof?` (${x.asof} 현재, 진행 중)`:" (진행 중)"):""}` + (has3 ? ` (백제 ${x.baekje} · 복산 ${x.boksan} · 인천 ${x.incheon})` : "") + (x.pp!=null ? ` · 순도 ${x.pvm}월 같은 ${x.bd}영업일 대비 ${x.pp>0?"+":""}${x.pp}%` : "");
+        tip = big   // 상세(큰) 그래프: 협력사별 금액만 / 메인(작은) 그래프: 월 매출 + 순도(진행 중인 달)
+          ? (has3 ? `${x.m}월 · 백제 ${nf(x.baekje)}억 · 복산 ${nf(x.boksan)}억 · 인천 ${nf(x.incheon)}억` : `${x.m}월 · ${nf(x.val)}억`)
+          : `${x.m}월 ${nf(x.val)}억` + (x.pp!=null ? ` (순도: ${x.bd}영업일 ${nf(x.pv)}억 / ${x.pp>0?"+":""}${x.pp}%)` : "");
         if(big){
           inner = has3
             ? `<div class="stk" style="--i:${i}"><i style="flex:${x.baekje};background:var(--c-baekje)"></i><i style="flex:${x.boksan};background:var(--c-boksan)"></i><i style="flex:${x.incheon};background:var(--c-incheon)"></i></div>`
