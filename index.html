@@ -967,25 +967,30 @@ const nfc = v => v==null ? "-" : v.toLocaleString("ko-KR");
 function outletChart(k, big){
   const o = k.outlets, m = o.monthly, li = lastIdx(m, "act");
   const scale = Math.max(o.goal, ...m.map(x=>x.join||0)) * 1.15;
-  const dl = (i,f)=> (i>0 && m[i][f]!=null && m[i-1][f]!=null) ? m[i][f]-m[i-1][f] : null;
+  const dl = (i,f)=> (i>0 && !m[i].partial && m[i][f]!=null && m[i-1][f]!=null) ? m[i][f]-m[i-1][f] : null;   // 진행 중인 달은 전월 대비 증감 대신 순도
   const sg = d => d==null ? "" : ` (${d<0?"▼":"▲"}${nfc(Math.abs(d))})`;
   const sh = d => d==null ? "" : `<s>${d<0?"▼":"▲"}${nfc(Math.abs(d))}</s>`;
   const cols = m.map((x,i)=>{
     const v = x.act, st = v==null ? "future" : (i===li ? "cur" : "past");
-    const tip = v==null ? `${x.m}월 · 아직 없음` : `${x.m}월 · 가동처 ${nfc(v)}${sg(dl(i,"act"))} · 가입처 ${nfc(x.join)}${sg(dl(i,"join"))}`;
+    const tip = v==null ? `${x.m}월 · 아직 없음` : (!big && x.partial && x.pp!=null)
+      ? `${x.m}월 ${nfc(v)}처 (순도: ${x.bd}영업일 ${nfc(x.pv)}처 / ${x.pp>0?"+":""}${x.pp}%)`
+      : `${x.m}월 · 가동처 ${nfc(v)}${sg(dl(i,"act"))} · 가입처 ${nfc(x.join)}${sg(dl(i,"join"))}`;
     const hj = v==null ? 0 : (x.join/scale*100).toFixed(1);
     const jb = v==null ? "" : `<i class="jbar" style="--hj:${hj}%;--i:${i}"></i>`;
     const lab = i===li ? `<span class="vl"><em>${nfc(x.join)}${sh(dl(i,"join"))}</em><b>${nfc(v)}${sh(dl(i,"act"))}</b></span>` : "";
     return `<div class="bw ${st}" style="--h:${v==null ? 0 : (v/scale*100).toFixed(1)}%;--hj:${hj}%" data-tip="${tip}" tabindex="0">${jb}${v==null ? "" : `<i class="bar" style="--i:${i}"></i>`}${lab}</div>`;
   }).join("");
   const overlay = `<div class="goal lft" style="--b:${(o.goal/scale*100).toFixed(1)}%"><span>목표 ${nfc(o.goal)}처</span></div>`;
-  const axis = m.map((x,i)=>`<span class="${i===li?'cur':''}">${x.m}월</span>`).join("");
-  const note = `<span><i style="background:var(--accent)"></i>가동처수(진한 막대·핵심)</span><span><i style="background:var(--orange);opacity:.4"></i>가입처수(연한 막대·가동처 포함)</span>` + (big ? `<span>점선: 목표 ${nfc(o.goal)}처 · ${m[li].m}월은 ${o.asof} · ▲ 전월 대비 증가</span>` : "");
+  const axis = m.map((x,i)=>`<span class="${i===li?'cur':''}">${x.partial&&x.asof ? x.asof+" 현재" : x.m+"월"}</span>`).join("");
+  const note = `<span><i style="background:var(--accent)"></i>가동처수(진한 막대·핵심)</span><span><i style="background:var(--orange);opacity:.4"></i>가입처수(연한 막대·가동처 포함)</span>` + (big ? `<span>점선: 목표 ${nfc(o.goal)}처 · ${m[li].m}월은 ${m[li].partial ? m[li].asof+" 현재(진행 중)" : o.asof} · ▲ 전월 대비 증가</span>` : "");
   return `<div class="chart${big?' big':''}"><div class="plot"><div class="cols">${cols}</div>${overlay}</div><div class="axis">${axis}</div><div class="cnote">${note}</div></div>`;
 }
 
 function numCellOutlets(k){
-  const o = k.outlets, m = o.monthly, li = lastIdx(m, "act"), cur = m[li], prev = m[li-1];
+  const o = k.outlets, m = o.monthly; let li = lastIdx(m, "act"); while(li>0 && m[li].partial) li--;   // 진행 중인 달은 큰 숫자에서 제외(마감된 달 기준)
+  const cur = m[li], prev = m[li-1];
+  const pcur = m.find(x=>x.partial && x.pp!=null);
+  const pcTxt = pcur ? `<br><b>${pcur.asof} 현재 ${nfc(pcur.act)}처</b> · ${pcur.pvm}월 같은 ${pcur.bd}영업일 대비 <b class="pc${pcur.pp<0?' dn':''}">${pcur.pp<0?'▼':'▲'} ${Math.abs(pcur.pp).toFixed(1)}%</b> <small>(${nfc(pcur.pv)} → ${nfc(pcur.act)}처)</small>` : "";
   const d = prev ? cur.act - prev.act : null;
   const dTxt = d==null ? "" : `<span class="delta${d<0?' dn':''}">${d<0?'▼':'▲'} ${nfc(Math.abs(d))}처</span>`;
   const pct = Math.round(cur.act / o.goal * 100);
@@ -994,16 +999,16 @@ function numCellOutlets(k){
   return `<button type="button" class="numcell nc-out" data-toggle="pillar" aria-expanded="false" title="눌러서 상세 보기">
       <span class="nl">${cur.m}월 가동처수 <em>(${o.asof})</em></span>
       <span class="nv">${nfc(cur.act)}<small>처</small>${dTxt}</span>
-      <span class="ns">목표 <b>${nfc(o.goal)}처</b> 중 <b>${pct}%</b> · 가입처 <b>${nfc(cur.join)}</b>${dj}</span>
+      <span class="ns">목표 <b>${nfc(o.goal)}처</b> 중 <b>${pct}%</b> · 가입처 <b>${nfc(cur.join)}</b>${dj}${pcTxt}</span>
       <span class="nbar"><i style="--w:${Math.min(100,pct)}%"></i></span>
     </button>`;
 }
 
 function outletDetail(k){
   const o = k.outlets;
-  const sd = (i,f)=>{ const p=o.monthly[i-1], x=o.monthly[i]; if(!p||x[f]==null||p[f]==null) return null; const d=x[f]-p[f]; return (d>0?"+":d<0?"-":"")+nfc(Math.abs(d)); };
-  const mm = o.monthly.map((x,i)=>({...x, dact:sd(i,"act"), djoin:sd(i,"join")}));
-  const table = renderKpiMonthly({ monthly:mm, monthlyRows:[{label:"가동처",field:"act",unit:""},{label:"증감",field:"dact",unit:""},{label:"가입처",field:"join",unit:""},{label:"증감",field:"djoin",unit:""}],
+  const sd = (i,f)=>{ const p=o.monthly[i-1], x=o.monthly[i]; if(!p||x.partial||x[f]==null||p[f]==null) return null; const d=x[f]-p[f]; return (d>0?"+":d<0?"-":"")+nfc(Math.abs(d)); };
+  const mm = o.monthly.map((x,i)=>({...x, dact:sd(i,"act"), djoin:sd(i,"join"), ppx:x.pp!=null ? (x.pp>0?"+":"")+x.pp+"%" : null}));
+  const table = renderKpiMonthly({ monthly:mm, monthlyRows:[{label:"가동처",field:"act",unit:""},{label:"증감",field:"dact",unit:""},{label:"가입처",field:"join",unit:""},{label:"증감",field:"djoin",unit:""},{label:"순도",field:"ppx",unit:""}],
     monthlyUnit:"", monthlyBase:`목표 가동처수 ${nfc(o.goal)}처 (로컬문전 약국 3,854처 × 80% × 85%)`, unitLabel:"단위: 처" });
   return `<div class="dsub">처수 (가입처·가동처)</div>${outletChart(k, true)}${table}`;
 }
