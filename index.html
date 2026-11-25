@@ -645,6 +645,7 @@
       <button id="dwLogisticsBtn">🚚 대웅물류현황</button>
       <button id="returnBtn">♻️ 환입·폐기</button>
       <button id="scheduleBtn">📅 일정표</button>
+      <button id="seojaeBtn" title="품절약 서재 열기 (박중문 PC에서만 열림)">📚 품절약 서재</button>
       <button id="obsidianBtn">🗒️ 옵시디언</button>
       <button id="epmBtn">📈 EPM</button>
       <button id="printBtn">🖨 PDF로 출력</button>
@@ -1704,6 +1705,7 @@ document.getElementById("dwLogisticsBtn").addEventListener("click", ()=>{ if(DW_
 document.getElementById("epmBtn").addEventListener("click", ()=>window.open("https://epm2026.vercel.app/dashboard","_blank"));
 document.getElementById("returnBtn").addEventListener("click", ()=>window.open("http://10.1.206.105:8080/%EB%8C%80%EC%8B%9C%EB%B3%B4%EB%93%9C/%EB%A7%A4%EC%B6%9C%ED%9D%90%EB%A6%84%EB%8F%84/index.html","_blank"));
 document.getElementById("scheduleBtn").addEventListener("click", ()=>window.open("schedule.html","_blank"));
+document.getElementById("seojaeBtn").addEventListener("click", ()=>{ location.href="seojae://start"; });   // 박중문 PC 전용: 품절약서재_프로토콜_등록.reg → world.py
 document.getElementById("obsidianBtn").addEventListener("click", ()=>window.open("obsidian://open?vault="+encodeURIComponent("옵시디언")+"&file="+encodeURIComponent("할일 대시보드"),"_blank"));
 
 function startApp(){
