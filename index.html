@@ -758,7 +758,7 @@ const KPI_DATA = [
       monthly:[
         {m:1, join:1172, act:770}, {m:2, join:1258, act:806}, {m:3, join:1354, act:889}, {m:4, join:1451, act:997}, {m:5, join:1486, act:1035},
         {m:6, join:1505, act:1097}, {m:7, join:1523, act:1094}, {m:8, join:1533, act:1095}, {m:9, join:1534, act:1096}, {m:10, join:1852, act:1313},
-        {m:11, join:null, act:1365, partial:1, asof:"11/26", bd:19, pvm:10, pv:1278, pp:6.8}, {m:12, join:null, act:null}
+        {m:11, join:1907, act:1365, partial:1, asof:"11/26", bd:19, pvm:10, pv:1278, pp:6.8}, {m:12, join:null, act:null}
       ] } },
   // 블록형 거점 도매 서비스: 거점 / 종합 / VC 3분할 (출처: SLA평가/10월/SLA 평가 종합_완료_10월.xlsx · 종합 관리장 시트)
   { cls:"kpi-svc", icon:"⭐", label:"블록형 · 거점도매", value:"S 9/11 권역", target:"목표 11개 권역 S (5/5 업체 전원 S)",
@@ -975,7 +975,7 @@ function outletChart(k, big){
   const cols = m.map((x,i)=>{
     const v = x.act, st = v==null ? "future" : (i===li ? "cur" : "past");
     const tip = v==null ? `${x.m}월 · 아직 없음` : (!big && x.partial && x.pp!=null)
-      ? `${x.m}월 ${nfc(v)}처 (순도: ${x.bd}영업일 ${nfc(x.pv)}처 / ${(x.act-x.pv)<0?"-":"+"}${nfc(Math.abs(x.act-x.pv))}처 / ${x.pp>0?"+":""}${x.pp.toFixed(1)}%)`
+      ? `${x.m}월 ${nfc(v)}처 (순도: ${x.bd}영업일 ${nfc(x.pv)}처 / ${(x.act-x.pv)<0?"-":"+"}${nfc(Math.abs(x.act-x.pv))}처 / ${x.pp>0?"+":""}${x.pp.toFixed(1)}%)` + (x.join!=null ? ` · ${x.asof} 현재 가입처 ${nfc(x.join)}처` : "")
       : `${x.m}월 · 가동처 ${nfc(v)}${sg(dl(i,"act"))}` + (x.join!=null ? ` · 가입처 ${nfc(x.join)}${sg(dl(i,"join"))}` : "");
     const hj = v==null ? 0 : (x.join/scale*100).toFixed(1);
     const jb = (v==null || x.join==null) ? "" : `<i class="jbar" style="--hj:${hj}%;--i:${i}"></i>`;
@@ -993,6 +993,9 @@ function numCellOutlets(k){
   const cur = m[li], prev = m[li-1];
   const pcur = m.find(x=>x.partial && x.pp!=null);
   const pcTxt = pcur ? `<br><b>${pcur.asof} 현재 ${nfc(pcur.act)}처</b> · ${pcur.pvm}월 같은 ${pcur.bd}영업일 대비 <b class="pc${pcur.pp<0?' dn':''}">${pcur.pp<0?'▼':'▲'} ${Math.abs(pcur.pp).toFixed(1)}%</b> <small>(${nfc(pcur.pv)} → ${nfc(pcur.act)}처 · ${(pcur.act-pcur.pv)<0?"-":"+"}${nfc(Math.abs(pcur.act-pcur.pv))}처)</small>` : "";
+  const pm = m[m.indexOf(pcur)-1];
+  const jn = pcur && pcur.join!=null && pm && pm.join!=null ? pcur.join - pm.join : null;
+  const jTxt = jn==null ? "" : `<br><b>${pcur.asof} 현재 가입처 ${nfc(pcur.join)}처</b> · ${pm.m}월 말 대비 순증 <b>${jn<0?"-":"+"}${nfc(Math.abs(jn))}처</b>`;
   const d = prev ? cur.act - prev.act : null;
   const dTxt = d==null ? "" : `<span class="delta${d<0?' dn':''}">${d<0?'▼':'▲'} ${nfc(Math.abs(d))}처</span>`;
   const pct = Math.round(cur.act / o.goal * 100);
@@ -1001,7 +1004,7 @@ function numCellOutlets(k){
   return `<button type="button" class="numcell nc-out" data-toggle="pillar" aria-expanded="false" title="눌러서 상세 보기">
       <span class="nl">${cur.m}월 가동처수 <em>(${o.asof})</em></span>
       <span class="nv">${nfc(cur.act)}<small>처</small>${dTxt}</span>
-      <span class="ns">목표 <b>${nfc(o.goal)}처</b> 중 <b>${pct}%</b> · 가입처 <b>${nfc(cur.join)}</b>${dj}${pcTxt}</span>
+      <span class="ns">목표 <b>${nfc(o.goal)}처</b> 중 <b>${pct}%</b> · 가입처 <b>${nfc(cur.join)}</b>${dj}${pcTxt}${jTxt}</span>
       <span class="nbar"><i style="--w:${Math.min(100,pct)}%"></i></span>
     </button>`;
 }
